@@ -33,8 +33,6 @@ const SHAPES: number[][][] = [
 
 const rotate = (m: number[][]) => m[0].map((_, i) => m.map((r) => r[i]).reverse());
 
-/** Our own palette, one tone per shape, so the well reads at a glance. */
-const SHAPE_TINT = ['#2f8f9d', '#c9a227', '#b5503c', '#5d7f3f', '#7a5aa6', '#c2763c'];
 
 /** 1984 — a tidy little puzzle game that gets progressively less tidy. */
 export function create1984(api: GameApi): MiniGame {
@@ -46,9 +44,8 @@ export function create1984(api: GameApi): MiniGame {
   let topped = false;
   let done = false;
   const grid: number[][] = Array.from({ length: H }, () => Array(W).fill(0));
-  let piece = { m: SHAPES[0], x: 3, y: 0, tint: 0 };
+  let piece = { m: SHAPES[0], x: 3, y: 0 };
   let nextIdx = randInt(0, SHAPES.length - 1);
-  const grid2: number[][] = Array.from({ length: H }, () => Array(W).fill(-1));
 
   // Leave the top of the stage free: that is where the control caption sits.
   const top = () => api.h * 0.15;
@@ -73,17 +70,14 @@ export function create1984(api: GameApi): MiniGame {
     const idx = nextIdx;
     nextIdx = randInt(0, SHAPES.length - 1);
     const m = SHAPES[idx];
-    piece = { m, x: Math.floor((W - m[0].length) / 2), y: -m.length, tint: idx };
+    piece = { m, x: Math.floor((W - m[0].length) / 2), y: -m.length };
     if (collides(m, piece.x, 0)) topped = true;
   };
 
   const lockPiece = () => {
     piece.m.forEach((row, y) =>
       row.forEach((v, x) => {
-        if (v && piece.y + y >= 0) {
-          grid[piece.y + y][piece.x + x] = 1;
-          grid2[piece.y + y][piece.x + x] = piece.tint;
-        }
+        if (v && piece.y + y >= 0) grid[piece.y + y][piece.x + x] = 1;
       }),
     );
     let cleared = 0;
@@ -91,8 +85,6 @@ export function create1984(api: GameApi): MiniGame {
       if (grid[y].every((v) => v)) {
         grid.splice(y, 1);
         grid.unshift(Array(W).fill(0));
-        grid2.splice(y, 1);
-        grid2.unshift(Array(W).fill(-1));
         cleared++;
         y++;
       }
@@ -190,42 +182,30 @@ export function create1984(api: GameApi): MiniGame {
       const Y = oy();
 
       ctx.save();
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.22;
       ctx.strokeStyle = api.colors.fg;
-      ctx.lineWidth = 3;
-      ctx.strokeRect(X - 3, Y - 3, c * W + 6, c * H + 6);
-      ctx.globalAlpha = 0.07;
-      for (let x = 1; x < W; x++) {
-        ctx.beginPath();
-        ctx.moveTo(X + x * c, Y);
-        ctx.lineTo(X + x * c, Y + c * H);
-        ctx.stroke();
-      }
+      ctx.lineWidth = 2;
+      ctx.strokeRect(X - 2, Y - 2, c * W + 4, c * H + 4);
       ctx.restore();
 
-      const block = (gx: number, gy: number, tint: number, alpha = 1, px = X, py = Y) => {
-        if (gy < 0 && py === Y) return;
+      const block = (gx: number, gy: number, alpha = 1) => {
+        if (gy < 0) return;
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.fillStyle = tint >= 0 ? SHAPE_TINT[tint % SHAPE_TINT.length] : api.colors.fg;
-        ctx.fillRect(px + gx * c + 1, py + gy * c + 1, c - 2, c - 2);
-        ctx.globalAlpha = alpha * 0.9;
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.fillRect(px + gx * c + 3, py + gy * c + 3, c - 6, c * 0.18);
-        ctx.fillStyle = 'rgba(0,0,0,0.22)';
-        ctx.fillRect(px + gx * c + 3, py + gy * c + c - c * 0.22, c - 6, c * 0.18);
+        ctx.fillStyle = api.colors.fg;
+        ctx.fillRect(X + gx * c + 1, Y + gy * c + 1, c - 2, c - 2);
+        ctx.fillStyle = api.colors.bg;
+        ctx.fillRect(X + gx * c + c * 0.28, Y + gy * c + c * 0.28, c * 0.44, c * 0.44);
         ctx.restore();
       };
 
-      grid.forEach((row, y) => row.forEach((v, x) => v && block(x, y, grid2[y][x])));
-      piece.m.forEach((row, y) =>
-        row.forEach((v, x) => v && block(piece.x + x, piece.y + y, piece.tint)),
-      );
+      grid.forEach((row, y) => row.forEach((v, x) => v && block(x, y)));
+      piece.m.forEach((row, y) => row.forEach((v, x) => v && block(piece.x + x, piece.y + y)));
 
       // ghost landing position, because 1984 did not have one and it shows
       let gy = piece.y;
       while (!collides(piece.m, piece.x, gy + 1)) gy++;
-      piece.m.forEach((row, y) => row.forEach((v, x) => v && block(piece.x + x, gy + y, piece.tint, 0.14)));
+      piece.m.forEach((row, y) => row.forEach((v, x) => v && block(piece.x + x, gy + y, 0.14)));
 
       // NEXT preview, bottom right of the well
       const nm = SHAPES[nextIdx];
@@ -237,9 +217,12 @@ export function create1984(api: GameApi): MiniGame {
         row.forEach((v, x) => {
           if (!v) return;
           ctx.save();
-          ctx.globalAlpha = 0.85;
-          ctx.fillStyle = SHAPE_TINT[nextIdx % SHAPE_TINT.length];
-          ctx.fillRect(bx + x * c * 0.55 + 1, by + 4 + y * c * 0.55 + 1, c * 0.55 - 2, c * 0.55 - 2);
+          ctx.globalAlpha = 0.75;
+          ctx.fillStyle = api.colors.fg;
+          const nc = c * 0.55;
+          ctx.fillRect(bx + x * nc + 1, by + 4 + y * nc + 1, nc - 2, nc - 2);
+          ctx.fillStyle = api.colors.bg;
+          ctx.fillRect(bx + x * nc + nc * 0.3, by + 4 + y * nc + nc * 0.3, nc * 0.4, nc * 0.4);
           ctx.restore();
         }),
       );
