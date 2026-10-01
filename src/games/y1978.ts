@@ -32,6 +32,7 @@ export function create1978(api: GameApi): MiniGame {
   let wave = 1;
   let shields = false;
   let px = 0;
+  let invuln = 0;
   const aliens: Alien[] = [];
   const shots: Shot[] = [];
   /** Four shields, each a grid of chunks that both sides can chew through. */
@@ -67,7 +68,7 @@ export function create1978(api: GameApi): MiniGame {
       vx: 90,
       vy: 0,
       size: Math.min(api.w, api.h) * 0.34,
-      hp: api.diff.goal(22),
+      hp: api.diff.goal(18),
       boss: true,
     });
     api.shout('OH');
@@ -143,6 +144,7 @@ export function create1978(api: GameApi): MiniGame {
     update(dt) {
       t += dt;
       script.update(t);
+      invuln = Math.max(0, invuln - dt);
       const scale = u() * 1.4;
 
       px = clamp(px + api.input.axisX * 430 * scale * dt, playerW() / 2, api.w - playerW() / 2);
@@ -152,16 +154,23 @@ export function create1978(api: GameApi): MiniGame {
 
       cool -= dt;
       if (api.input.action && cool <= 0) {
-        cool = 0.26;
+        cool = 0.2;
         shots.push({ x: px, y: playerY(), vy: -620 * scale, from: 'player' });
         api.audio.blip(900, 0.06, 'square', 0.18, 420);
       }
 
       if (!bossSpawned && aliens.length === 0) {
         wave++;
-        spawnWave(2 + Math.min(2, wave), 7 + Math.min(2, wave));
+        lives++;
+        api.shout('EXTRA SHIP');
+        api.audio.jingle([72, 76, 79, 84], 0.06, 'square');
+        spawnWave(3, wave >= 3 ? 8 : 7);
         api.say(wave === 2 ? 'They brought friends.' : `Wave ${wave}. Nobody is counting but you.`);
       }
+
+      // One bullet budget for the whole screen, so the pressure is readable.
+      const incoming = shots.filter((sh) => sh.from === 'alien').length;
+      const cap = Math.min(5, 3 + Math.floor(t / 15));
 
       // aliens
       for (const a of aliens) {
@@ -169,13 +178,18 @@ export function create1978(api: GameApi): MiniGame {
           a.x += a.vx * dt;
           if (a.x < a.size / 2 || a.x > api.w - a.size / 2) a.vx *= -1;
           a.y = api.h * 0.3 + Math.sin(t * 1.5) * 20 * scale;
-          if (Math.random() < 1.9 * dt) {
-            shots.push({ x: a.x + rand(-a.size / 3, a.size / 3), y: a.y + a.size / 2, vy: 300 * scale, from: 'alien' });
+          if (incoming < cap && Math.random() < api.diff.pace(1.25) * dt) {
+            shots.push({
+              x: a.x + rand(-a.size / 3, a.size / 3),
+              y: a.y + a.size / 2,
+              vy: 300 * scale,
+              from: 'alien',
+            });
           }
           continue;
         }
         a.x += a.vx * api.diff.pace(rate) * dt;
-        a.y += (10 + (homing ? 26 : 0)) * api.diff.pace(rate) * scale * dt;
+        a.y += 7 * api.diff.pace(rate) * scale * dt;
         if (a.x < a.size || a.x > api.w - a.size) {
           a.vx *= -1;
           a.y += 14 * scale;
@@ -188,17 +202,26 @@ export function create1978(api: GameApi): MiniGame {
           );
           if (threat) a.x += Math.sign(a.x - threat.x || 1) * 240 * scale * dt;
         }
-        // Arcade rule: only so many enemy bullets may exist at once, so the opening
-        // is readable and the pressure comes from the clock instead of the volume.
-        const incoming = shots.filter((s) => s.from === 'alien').length;
-        const cap = 3 + Math.floor(t / 9);
+        // Arcade rule: only so many enemy bullets at once, so the opening is
+        // readable and the pressure comes from the clock, not the volume.
         if (incoming < cap && Math.random() < (0.06 + t * 0.006) * rate * dt) {
           shots.push({ x: a.x, y: a.y + a.size / 2, vy: 260 * scale, from: 'alien' });
         }
         if (a.y > api.h - 60 * scale) {
-          lives = 0;
-          api.lose('They landed. That counts as losing.');
-          return;
+          // Reaching the floor takes a life rather than the whole run; the formation
+          // always outlasts the player otherwise.
+          a.hp = 0;
+          a.y = -999;
+          if (invuln <= 0) {
+            lives--;
+            invuln = 2.2;
+            api.audio.noise(0.5, 0.3, 400);
+            if (lives <= 0) {
+              api.lose('They landed. That counts as losing.');
+              return;
+            }
+            api.say('One got through. That costs.');
+          }
         }
       }
 
@@ -230,7 +253,7 @@ export function create1978(api: GameApi): MiniGame {
                   api.win({ stat: `${kills} ALIENS, ONE VERY LARGE ONE`, score: kills });
                   return;
                 }
-                if (split && a.size > 14 * scale) {
+                if (split && a.size > 14 * scale && aliens.length < 18) {
                   for (const dir of [-1, 1]) {
                     aliens.push({
                       x: a.x + dir * a.size * 0.4,
@@ -247,14 +270,20 @@ export function create1978(api: GameApi): MiniGame {
             }
           }
         } else {
-          const pr = { x: px - playerW() / 2, y: playerY() - 10 * scale, w: playerW(), h: 22 * scale };
+          // The hull is narrower than the sprite, and a hit buys a breath of safety:
+          // without it one bad second takes every life at once.
+          const hull = playerW() * 0.6;
+          const pr = { x: px - hull / 2, y: playerY() - 8 * scale, w: hull, h: 20 * scale };
           if (aabb({ x: s.x - 3, y: s.y - 6, w: 6, h: 12 }, pr)) {
             shots.splice(i, 1);
-            if (!script.mercy) lives--;
-            api.audio.noise(0.4, 0.3, 600);
-            if (lives <= 0) {
-              api.lose('Shot down by pixels.');
-              return;
+            if (!script.mercy && invuln <= 0) {
+              lives--;
+              invuln = 2.2;
+              api.audio.noise(0.4, 0.3, 600);
+              if (lives <= 0) {
+                api.lose('Shot down by pixels.');
+                return;
+              }
             }
           }
         }
@@ -275,9 +304,11 @@ export function create1978(api: GameApi): MiniGame {
 
       // player
       const pw = playerW();
+      ctx.globalAlpha = invuln > 0 && Math.floor(invuln * 12) % 2 ? 0.3 : 1;
       ctx.fillRect(px - pw / 2, playerY(), pw, 10 * scale);
       ctx.fillRect(px - pw / 6, playerY() - 10 * scale, pw / 3, 10 * scale);
       ctx.fillRect(px - 3 * scale, playerY() - 18 * scale, 6 * scale, 8 * scale);
+      ctx.globalAlpha = 1;
 
       // bunkers
       const cs = 9 * scale;

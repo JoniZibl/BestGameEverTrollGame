@@ -62,6 +62,7 @@ export function create2001(api: GameApi): MiniGame {
         const fridge = things.find((x) => x.key === 'hunger');
         if (fridge) fridge.gone = true;
         api.say('The fridge is part of the expansion pack. Sorry.');
+        api.shout('HUNGER PAUSED');
       },
     },
     {
@@ -131,6 +132,10 @@ export function create2001(api: GameApi): MiniGame {
       using = Math.max(0, using - dt);
 
       for (const n of needs) {
+        // A need whose only source has been removed stops draining. The simulation
+        // does not understand why, and neither does anyone else.
+        const source = things.find((th) => th.key === n.key);
+        if (source?.gone) continue;
         n.value -= api.diff.pace(n.drain) * dt;
         if (n.value <= 0) {
           api.lose(`${n.label} reached zero. The neighbours are talking.`);

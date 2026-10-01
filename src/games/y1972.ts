@@ -31,6 +31,7 @@ export function create1972(api: GameApi): MiniGame {
   let titleFade = 1;
   let mirror = false;
   let ghost = false;
+  let missCool = 0;
   const balls: Ball[] = [];
 
   const ballR = () => Math.max(6, Math.min(api.w, api.h) * 0.022);
@@ -95,7 +96,16 @@ export function create1972(api: GameApi): MiniGame {
       run: () => {
         for (let i = 0; i < 6; i++) spawnBall();
         api.shout('EIGHT BALLS');
+        api.say('Nobody is counting any more. Misses are free while this lasts.');
         api.audio.jingle([60, 62, 64, 65], 0.05, 'square');
+      },
+    },
+    {
+      at: 34,
+      run: () => {
+        // Collect the extras again, so the finish is a duel and not a lottery.
+        while (balls.length > 1) balls.pop();
+        api.say('The other seven rolled under the cabinet.');
       },
     },
     {
@@ -147,6 +157,7 @@ export function create1972(api: GameApi): MiniGame {
       script.update(t);
       titleFade = clamp(1 - (t - 2) / 1.6, 0.12, 1);
       tilt += (tiltTarget * Math.sin(t * 1.4) - tilt) * dt * 3;
+      missCool = Math.max(0, missCool - dt);
 
       const pw = paddleW * api.w;
       if (api.input.left || api.input.right) {
@@ -208,21 +219,29 @@ export function create1972(api: GameApi): MiniGame {
 
         if (b.y > api.h + 60) {
           balls.splice(i, 1);
-          if (!script.mercy) lives--;
-          api.audio.blip(140, 0.3, 'square', 0.3, 60);
-          if (lives <= 0) {
-            api.lose('Two rectangles beat you.');
-            return;
+          // A miss costs a life only while the game is still pretending to be fair:
+          // during the multi-ball spree, and briefly after any miss, it is free.
+          const chargeable = balls.length < 2 && !script.mercy && missCool <= 0;
+          if (chargeable) {
+            lives--;
+            missCool = 1.3;
+            api.audio.blip(140, 0.3, 'square', 0.3, 60);
+            if (lives <= 0) {
+              api.lose('Two rectangles beat you.');
+              return;
+            }
           }
-          spawnBall(1);
+          if (balls.length === 0) spawnBall(1);
         } else if (b.y < -60) {
           balls.splice(i, 1);
           api.audio.blip(660, 0.1, 'square', 0.2);
-          spawnBall(1);
+          if (balls.length === 0) spawnBall(1);
         }
       }
 
-      api.hud(`LIVES ${lives}    RALLIES ${rallies}    ${Math.max(0, ROUND - t).toFixed(0)}s`);
+      api.hud(
+        `LIVES ${lives}${balls.length > 1 ? ' (FREE)' : ''}    RALLIES ${rallies}    ${Math.max(0, ROUND - t).toFixed(0)}s`,
+      );
 
       if (t >= ROUND) {
         api.win({

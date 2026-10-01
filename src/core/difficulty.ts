@@ -41,7 +41,7 @@ export const DIFFICULTIES: DifficultyDef[] = [
     id: 'arcade',
     label: 'ARCADE',
     blurb: 'The machine wants your money. There is no money.',
-    lives: 0.6,
+    lives: 0.7,
     pace: 1.28,
     goal: 1.35,
     time: 0.85,

@@ -145,10 +145,10 @@ export function create2017(api: GameApi): MiniGame {
           }
         } else if (rivalHunting) {
           const d = Math.max(1, dist(rival.x, rival.y, player.x, player.y));
-          rival.x += ((player.x - rival.x) / d) * 180 * dt;
-          rival.y += ((player.y - rival.y) / d) * 180 * dt;
+          rival.x += ((player.x - rival.x) / d) * 150 * dt;
+          rival.y += ((player.y - rival.y) / d) * 150 * dt;
           if (d < 24) {
-            hp -= api.diff.pace(42) * dt;
+            hp -= api.diff.pace(22) * dt;
             if (Math.random() < 0.1) api.audio.blip(90, 0.12, 'sawtooth', 0.18);
             if (hp <= 0) {
               api.lose('Second place. Out of two.');

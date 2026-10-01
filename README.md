@@ -140,6 +140,18 @@ game stops pretending it cannot hear you and offers to drop a difficulty step fo
 Winning earns the time fragment and opens the next year; all twenty-seven fragments
 means winning all twenty-two years and finding the five hidden elsewhere.
 
+## Is it actually winnable?
+
+Measured, not guessed. `npm run sim` plays the games headlessly with a scripted
+player and counts wins at each difficulty; see `sim/README.md`. The bar is: a bot
+wins on VISITOR, usually wins on PLAYER, and ARCADE is allowed to refuse.
+
+That harness found four years that could only be lost, however well you played —
+1972 (every miss during the eight-ball spree cost a life), 1978 (wave two spawned
+more aliens than could be cleared, and the homing beat dropped the formation onto
+the floor), 2001 (the fridge joke removed the only cure for a need that kept
+draining) and 1994 (three battles with no heal between them). All four are fixed.
+
 ## How the trolling works
 
 Each year escalates, but two rules keep it a joke rather than a mugging.

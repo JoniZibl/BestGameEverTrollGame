@@ -51,11 +51,16 @@ export function create1994(api: GameApi): MiniGame {
       window.setTimeout(() => api.win({ stat: `3 RANDOM ENCOUNTERS SURVIVED` }), 1600);
       return;
     }
-    foeMax = api.diff.goal(90 + battle * 45);
+    foeMax = api.diff.goal(90 + Math.min(battle, 2) * 24);
     foeHp = foeMax;
     foeTimer = 3.2;
     atb = 0;
+    // The party rests between encounters. Without it, three fights in a row are
+    // decided by how much health battle one happened to leave you.
+    hp = maxHp;
+    mp = Math.min(24, mp + 8);
     api.shout('ANOTHER RANDOM\nENCOUNTER');
+    api.say('The party rests. Briefly.');
     say(battle === 3 ? 'YOU HAVE TAKEN FOUR STEPS.' : 'A WILD SHAPE APPEARS. AGAIN.');
     api.audio.jingle([57, 60, 64], 0.1, 'square');
   };
@@ -80,7 +85,7 @@ export function create1994(api: GameApi): MiniGame {
       float(`${dmg}`, true);
       say('SOMETHING EXPENSIVE HAPPENS.');
     } else if (i === 2) {
-      hp = Math.min(maxHp, hp + 40);
+      hp = Math.min(maxHp, hp + 55);
       float('+40', false);
       say('YOU DRINK THE GREEN ONE.');
     } else {
@@ -115,11 +120,11 @@ export function create1994(api: GameApi): MiniGame {
       for (let i = floats.length - 1; i >= 0; i--) if (floats[i].life <= 0) floats.splice(i, 1);
 
       if (foeHp > 0) {
-        atb = clamp(atb + dt / 2.6, 0, 1);
+        atb = clamp(atb + dt / 2.2, 0, 1);
         foeTimer -= dt;
         if (foeTimer <= 0) {
-          foeTimer = (rand(2.8, 4.2) - battle * 0.3) / api.diff.pace(1);
-          const dmg = Math.round(api.diff.pace(rand(8, 14) + battle * 5));
+          foeTimer = (rand(3.2, 4.6) - battle * 0.3) / api.diff.pace(1);
+          const dmg = Math.round(api.diff.pace(rand(7, 12) + battle * 3.5));
           hp -= dmg;
           float(`${dmg}`, false);
           say('THE SHAPE RETALIATES.');
