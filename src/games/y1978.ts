@@ -24,12 +24,13 @@ export function create1978(api: GameApi): MiniGame {
   let lives = api.diff.lives(4);
   let kills = 0;
   let cool = 0;
-  let dodge = false;
   let split = false;
   let homing = false;
   let rate = 1;
   let bossSpawned = false;
   let wave = 1;
+  /** How briskly the formation marches sideways. It never sidesteps a shot. */
+  let march = 1;
   let shields = false;
   let px = 0;
   let invuln = 0;
@@ -60,6 +61,7 @@ export function create1978(api: GameApi): MiniGame {
   };
 
   const spawnBoss = () => {
+    if (bossSpawned) return;
     bossSpawned = true;
     aliens.length = 0;
     aliens.push({
@@ -80,8 +82,11 @@ export function create1978(api: GameApi): MiniGame {
       {
         at: 8,
         when: () => kills >= 6,
-        warn: 'They have been watching your aim.',
-        run: () => { dodge = true; api.say('Apparently the aliens learned something.'); },
+        warn: 'They have been watching the clock.',
+        run: () => {
+          march = 1.5;
+          api.say('Apparently the aliens learned something. It was not evasion.');
+        },
       },
       { at: 14, when: () => kills >= 14, run: () => { rate = api.diff.pace(1.7); api.say('And they have been practising.'); } },
       { at: 20, when: () => wave >= 2, warn: 'Right.', run: () => { split = true; api.shout('THEY SPLIT NOW'); } },
@@ -160,12 +165,18 @@ export function create1978(api: GameApi): MiniGame {
       }
 
       if (!bossSpawned && aliens.length === 0) {
-        wave++;
-        lives++;
-        api.shout('EXTRA SHIP');
-        api.audio.jingle([72, 76, 79, 84], 0.06, 'square');
-        spawnWave(3, wave >= 3 ? 8 : 7);
-        api.say(wave === 2 ? 'They brought friends.' : `Wave ${wave}. Nobody is counting but you.`);
+        if (wave >= 3) {
+          // Three waves cleared is the honest route to the ending.
+          api.shout('THAT WAS\nALL OF THEM');
+          spawnBoss();
+        } else {
+          wave++;
+          lives++;
+          api.shout('EXTRA SHIP');
+          api.audio.jingle([72, 76, 79, 84], 0.06, 'square');
+          spawnWave(3, wave >= 3 ? 8 : 7);
+          api.say(wave === 2 ? 'They brought friends.' : 'Wave three. Then we will see.');
+        }
       }
 
       // One bullet budget for the whole screen, so the pressure is readable.
@@ -188,7 +199,7 @@ export function create1978(api: GameApi): MiniGame {
           }
           continue;
         }
-        a.x += a.vx * api.diff.pace(rate) * dt;
+        a.x += a.vx * march * api.diff.pace(rate) * dt;
         a.y += 7 * api.diff.pace(rate) * scale * dt;
         if (a.x < a.size || a.x > api.w - a.size) {
           a.vx *= -1;
@@ -196,11 +207,6 @@ export function create1978(api: GameApi): MiniGame {
         }
         if (homing) {
           a.x += Math.sign(px - a.x) * 60 * scale * dt;
-        } else if (dodge) {
-          const threat = shots.find(
-            (s) => s.from === 'player' && Math.abs(s.x - a.x) < a.size && s.y > a.y && s.y < a.y + 260 * scale,
-          );
-          if (threat) a.x += Math.sign(a.x - threat.x || 1) * 240 * scale * dt;
         }
         // Arcade rule: only so many enemy bullets at once, so the opening is
         // readable and the pressure comes from the clock, not the volume.

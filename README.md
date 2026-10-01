@@ -146,6 +146,10 @@ Measured, not guessed. `npm run sim` plays the games headlessly with a scripted
 player and counts wins at each difficulty; see `sim/README.md`. The bar is: a bot
 wins on VISITOR, usually wins on PLAYER, and ARCADE is allowed to refuse.
 
+The harness also keeps the opposite honest: when 1978's aliens stopped dodging,
+clearing waves faster simply summoned more of them, so good play was punished.
+Three cleared waves now bring the boss instead of a fourth wave.
+
 That harness found four years that could only be lost, however well you played —
 1972 (every miss during the eight-ball spree cost a life), 1978 (wave two spawned
 more aliens than could be cleared, and the homing beat dropped the formation onto

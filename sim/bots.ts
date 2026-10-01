@@ -10,25 +10,39 @@ export const pongBot: Bot = (input, _t, api, seen) => {
   input.pointerY = target[1];
 };
 
-/** Space shooter: sit under the lowest alien, fire constantly, flee near bullets. */
+/**
+ * Space shooter: hold a column that no bullet is falling down, and keep firing.
+ * The earlier version only flinched at the nearest shot, which flattered the
+ * game's difficulty by dying more than a person would.
+ */
 export const shooterBot: Bot = (input, _t, api, seen) => {
   const rects = seen.rects();
-  // Enemy shots are tall thin rectangles; aliens are wide blocks up the screen.
-  const shots = rects.filter((r) => r[2] < api.w * 0.02 && r[3] > r[2] && r[1] > api.h * 0.4);
+  const shots = rects.filter((r) => r[2] < api.w * 0.02 && r[3] > r[2] && r[1] > api.h * 0.25);
   const aliens = rects.filter((r) => r[2] > api.w * 0.03 && r[1] < api.h * 0.6);
-  let want = api.w / 2;
-  if (aliens.length) {
+
+  const safeAt = (x: number) =>
+    shots.every((sh) => Math.abs(sh[0] - x) > api.w * 0.07 || sh[1] < api.h * 0.3);
+
+  let want = input.pointerX || api.w / 2;
+  if (!safeAt(want)) {
+    // Step outwards until a clear column turns up.
+    for (let d = api.w * 0.05; d < api.w; d += api.w * 0.05) {
+      if (safeAt(want - d) && want - d > 20) {
+        want -= d;
+        break;
+      }
+      if (safeAt(want + d) && want + d < api.w - 20) {
+        want += d;
+        break;
+      }
+    }
+  } else if (aliens.length) {
+    // Safe: drift under the lowest alien to keep the kills coming.
     const low = aliens.reduce((a, b) => (b[1] > a[1] ? b : a));
-    want = low[0] + low[2] / 2;
+    const target = low[0] + low[2] / 2;
+    if (safeAt(target)) want += Math.max(-6, Math.min(6, target - want));
   }
-  // Dodge anything that is going to arrive on this column, not just what is close.
-  const danger = shots
-    .filter((s) => Math.abs(s[0] - input.pointerX) < api.w * 0.14)
-    .sort((a, b) => b[1] - a[1])[0];
-  if (danger) {
-    const away = danger[0] < api.w / 2 ? 1 : -1;
-    want = input.pointerX + away * api.w * 0.3;
-  }
+
   input.pointerDown = true;
   input.pointerX = Math.max(20, Math.min(api.w - 20, want));
   input.pointerY = api.h - 30;

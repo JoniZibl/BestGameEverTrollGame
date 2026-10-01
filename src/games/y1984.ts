@@ -3,8 +3,8 @@ import { Script, fill, randInt, text, timerBar } from './helpers';
 
 const W = 10;
 const H = 18;
-const BASE_ROUND = 45;
-const BASE_TARGET = 4;
+const BASE_ROUND = 36;
+const BASE_TARGET = 3;
 
 /** Our own block set. Same idea, different shapes — four of them, all ours. */
 const SHAPES: number[][][] = [
@@ -116,12 +116,16 @@ export function create1984(api: GameApi): MiniGame {
   // rather than a clock running out.
   const script = new Script(
     [
-      { at: 12, when: () => lines >= 1, run: () => bump(2, 'Okay. Maybe we made this too easy.') },
-      { at: 20, when: () => lines >= 2, run: () => bump(3, 'Still comfortable?') },
-      { at: 27, when: () => lines >= 3, warn: 'Hm.', run: () => bump(5, 'Hm.') },
-      { at: 33, when: () => lines >= LINE_TARGET - 1, warn: 'One line left. About that.', run: () => bump(8, 'You are doing better than expected.') },
-      { at: 39, warn: 'Right.', run: () => bump(16, 'Right.') },
-      { at: 41, run: () => api.say('This is roughly level 29. People trained for years.') },
+      { at: 10, when: () => lines >= 1, run: () => bump(2, 'Okay. Maybe we made this too easy.') },
+      { at: 18, when: () => lines >= 2, warn: 'Hm.', run: () => bump(3, 'Still comfortable?') },
+      {
+        at: 26,
+        when: () => lines >= LINE_TARGET - 1,
+        warn: 'One line left. About that.',
+        run: () => bump(5, 'You are doing better than expected.'),
+      },
+      { at: 32, warn: 'Right.', run: () => bump(9, 'Right.') },
+      { at: 34, run: () => api.say('This is roughly level 29. People trained for years.') },
     ],
     { say: api.say, grace: api.diff.grace },
   );
@@ -167,7 +171,7 @@ export function create1984(api: GameApi): MiniGame {
         return;
       }
 
-      const interval = Math.max(0.035, 0.8 / api.diff.pace(speed));
+      const interval = Math.max(0.05, 0.62 / api.diff.pace(speed));
       fallTimer += dt * (api.input.downKey ? 8 : 1);
       if (fallTimer >= interval) {
         fallTimer = 0;
