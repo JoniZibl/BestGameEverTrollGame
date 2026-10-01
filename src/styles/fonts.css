@@ -1,0 +1,65 @@
+/* Self-hosted so the typography never depends on someone else's CDN. */
+
+@font-face {
+  font-family: 'Rowdies';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./fonts/rowdies-300.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Rowdies';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/rowdies-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Rowdies';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/rowdies-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/pressstart2p-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/vt323-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/inter-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/inter-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./fonts/inter-800.woff2') format('woff2');
+}

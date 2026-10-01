@@ -1,0 +1,538 @@
+/* ============================================================
+   The website ages with the player. Each theme is roughly what
+   screens looked like when that era's games were new.
+   ============================================================ */
+
+/* 1962 — a borrowed radar scope. */
+.app[data-theme='oscilloscope'] {
+  --bg: #eee4d1;
+  --fg: #3b2c27;
+  --dim: #a89584;
+  --accent: #6d5a4a;
+  --warn: #8a6a3a;
+  --radius: 0px;
+  --border: 3px;
+  --scanline: 0.05;
+  --display: 'Rowdies', 'Arial Black', sans-serif;
+  --body: 'VT323', 'Courier New', monospace;
+  --panel: rgba(59, 44, 39, 0.06);
+}
+.app[data-theme='oscilloscope'] .app-inner {
+  animation: flicker 5s infinite steps(24);
+}
+.app[data-theme='oscilloscope'] p,
+.app[data-theme='oscilloscope'] .fact {
+  font-size: 1.15em;
+}
+
+@keyframes flicker {
+  0%, 96%, 100% { opacity: 1; }
+  97% { opacity: 0.94; }
+  98% { opacity: 1; }
+  99% { opacity: 0.9; }
+}
+
+/* 1972–1980 — the cabinet. */
+.app[data-theme='arcade'] {
+  --bg: #f1e7d6;
+  --fg: #412f2a;
+  --dim: #a8968a;
+  --accent: #c4452f;
+  --warn: #d08c1e;
+  --radius: 0px;
+  --border: 5px;
+  --scanline: 0.035;
+  --panel: rgba(65, 47, 42, 0.07);
+}
+
+/* 1984–1985 — eight bits, more colours than strictly necessary. */
+.app[data-theme='bit8'] {
+  --bg: #f4ead2;
+  --fg: #38292a;
+  --dim: #9e8e82;
+  --accent: #d2552a;
+  --warn: #3f7d4e;
+  --radius: 0px;
+  --border: 4px;
+  --scanline: 0.03;
+  --panel: rgba(56, 41, 42, 0.08);
+}
+.app[data-theme='bit8'] .result-kicker,
+.app[data-theme='bit8'] .brief-year,
+.app[data-theme='bit8'] .hud-line,
+.app[data-theme='bit8'] .fragments {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+}
+.app[data-theme='bit8'] .btn {
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--fg) 30%, transparent);
+}
+
+/* 1992–1993 — sixteen bits, bevels, a purple streak. */
+.app[data-theme='bit16'] {
+  --bg: #ece2d3;
+  --fg: #31262f;
+  --dim: #948a97;
+  --accent: #8c4bb3;
+  --warn: #c8842a;
+  --radius: 2px;
+  --border: 3px;
+  --scanline: 0.035;
+  --panel: rgba(49, 38, 47, 0.08);
+}
+.app[data-theme='bit16'] .btn {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fg) 85%, white) 0%, var(--fg) 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25), 3px 3px 0 rgba(49, 38, 47, 0.3);
+}
+.app[data-theme='bit16'] .topbar {
+  background: linear-gradient(180deg, rgba(140, 75, 179, 0.12), transparent);
+}
+
+/* 1996 — fog, and a horizon that keeps its distance. */
+.app[data-theme='early3d'] {
+  --bg: #e6e0d1;
+  --fg: #2d2a25;
+  --dim: #8f8d82;
+  --accent: #4b7f6c;
+  --warn: #b5702e;
+  --radius: 3px;
+  --border: 2px;
+  --scanline: 0.03;
+  --panel: rgba(45, 42, 37, 0.07);
+}
+.app[data-theme='early3d'] .app-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 45%, color-mix(in srgb, var(--bg) 85%, transparent) 100%);
+}
+
+/* 2000–2004 — the glossy web. The cream finally leaves. */
+.app[data-theme='web2'] {
+  --bg: #eef2f7;
+  --fg: #21303f;
+  --dim: #8fa3b5;
+  --accent: #2a6db5;
+  --warn: #e0912b;
+  --radius: 10px;
+  --border: 2px;
+  --scanline: 0;
+  --body: 'Inter', system-ui, sans-serif;
+  --panel: rgba(33, 48, 63, 0.06);
+  --shadow: 0 6px 16px rgba(33, 48, 63, 0.14);
+}
+.app[data-theme='web2'] {
+  background: linear-gradient(180deg, #f7fbff 0%, #dfe8f2 100%);
+}
+.app[data-theme='web2'] .btn {
+  background: linear-gradient(180deg, #4a90d9 0%, #2a6db5 100%);
+  border-color: #1d5894;
+  color: #fff;
+}
+.app[data-theme='web2'] .btn.ghost {
+  background: linear-gradient(180deg, #ffffff 0%, #dfe8f2 100%);
+  color: var(--fg);
+}
+
+/* 2009–2013 — flat, white, and very keen on rounded corners. */
+.app[data-theme='flat'] {
+  --bg: #f7f7f5;
+  --fg: #2b2b2b;
+  --dim: #b5b5b0;
+  --accent: #ff5a4f;
+  --warn: #ffb300;
+  --radius: 14px;
+  --border: 0px;
+  --scanline: 0;
+  --body: 'Inter', system-ui, sans-serif;
+  --display: 'Rowdies', system-ui, sans-serif;
+  --panel: rgba(43, 43, 43, 0.05);
+  --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+.app[data-theme='flat'] .btn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  border-radius: 999px;
+}
+.app[data-theme='flat'] .btn.ghost {
+  background: rgba(43, 43, 43, 0.06);
+  color: var(--fg);
+}
+.app[data-theme='flat'] .topbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+/* 2017–2026 — dark, blurred, extremely confident. */
+.app[data-theme='modern'] {
+  --bg: #0e1116;
+  --fg: #edf1f7;
+  --dim: #5d6775;
+  --accent: #7f9dff;
+  --warn: #ffc457;
+  --radius: 16px;
+  --border: 0px;
+  --scanline: 0;
+  --body: 'Inter', system-ui, sans-serif;
+  --panel: rgba(255, 255, 255, 0.06);
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+.app[data-theme='modern'] {
+  background:
+    radial-gradient(1100px 620px at 20% -10%, rgba(127, 157, 255, 0.2), transparent 60%),
+    radial-gradient(900px 500px at 90% 110%, rgba(255, 110, 180, 0.14), transparent 60%),
+    #0e1116;
+}
+.app[data-theme='modern'] .btn {
+  background: linear-gradient(180deg, #8ea8ff, #5f7ff0);
+  color: #0b0e13;
+  border: none;
+  border-radius: 999px;
+}
+.app[data-theme='modern'] .btn.ghost {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--fg);
+  backdrop-filter: blur(10px);
+}
+.app[data-theme='modern'] .topbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+}
+.app[data-theme='modern'] .popup,
+.app[data-theme='modern'] .gameover {
+  background: rgba(22, 26, 34, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+}
+.app[data-theme='modern'] .toast {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg);
+  backdrop-filter: blur(14px);
+}
+
+/* ============================================================
+   Era-specific game surfaces
+   ============================================================ */
+
+/* 2000 — dial-up */
+.era2000 {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  text-align: center;
+}
+.era2000 h2 {
+  font-size: clamp(1.4rem, 5vw, 2.6rem);
+  letter-spacing: 0.1em;
+}
+.modem {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 64px;
+}
+.modem span {
+  width: 6px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  transition: height 220ms ease;
+}
+.era2000 .pct {
+  font-family: var(--display);
+  font-size: clamp(3rem, 14vw, 7rem);
+  line-height: 1;
+}
+.loglines {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  opacity: 0.5;
+  display: flex;
+  gap: 10px;
+}
+.era2000 .hint {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+.era2000.arena {
+  cursor: crosshair;
+  background: linear-gradient(180deg, rgba(42, 109, 181, 0.08), transparent);
+}
+.net-hud {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+.target {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--bg) 70%, transparent);
+}
+.shot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--fg);
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: shotwait 420ms linear;
+}
+@keyframes shotwait {
+  from { transform: scale(0.3); opacity: 0.9; }
+  to { transform: scale(1.6); opacity: 0.2; }
+}
+.lagnote {
+  position: absolute;
+  bottom: 14px;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* 2004 — the kingdom */
+.era2004 {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+.mmo-world {
+  position: relative;
+  overflow: hidden;
+}
+.mmo-sky {
+  position: absolute;
+  inset: 0 0 38% 0;
+  background: linear-gradient(180deg, #9ec7e8, #dbe9f3);
+}
+.mmo-ground {
+  position: absolute;
+  inset: 62% 0 0 0;
+  background: linear-gradient(180deg, #6f9a52, #4d7138);
+}
+.mushroom {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: #c0392b;
+  border-radius: 50% 50% 30% 30%;
+  box-shadow: 0 10px 0 -4px #f0e6d2;
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+.mushroom.picked {
+  opacity: 0.15;
+  transform: scale(0.6);
+}
+.hero {
+  position: absolute;
+  left: 46%;
+  bottom: 24%;
+  width: 26px;
+  height: 46px;
+  background: #2b3a55;
+  border-radius: 6px 6px 2px 2px;
+  box-shadow: 0 -16px 0 -4px #e8c39e;
+}
+.quest-panel {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: min(92vw, 320px);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow);
+}
+.quest-panel h3 {
+  font-size: 1.1rem;
+}
+.objective {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+.xp,
+.cast {
+  height: 10px;
+  background: var(--panel);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.xp span,
+.cast span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 200ms ease;
+}
+.quest-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quest-buttons .btn {
+  font-size: 0.85rem;
+  padding: 0.6em 1em;
+}
+.mmo-chat {
+  padding: 8px 14px;
+  font-family: var(--body);
+  font-size: 0.78rem;
+  opacity: 0.6;
+  background: var(--panel);
+  max-height: 96px;
+  overflow: hidden;
+}
+.mmo-chat b {
+  color: var(--accent);
+}
+
+/* 2026 — please wait */
+.era2026 {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: clamp(16px, 4vw, 40px);
+  text-align: center;
+}
+.modern-logo {
+  letter-spacing: 0.5em;
+  font-size: 0.7rem;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+.era2026 h2 {
+  font-size: clamp(1.3rem, 4.6vw, 2.4rem);
+  letter-spacing: 0.04em;
+}
+.modern-bar {
+  width: min(560px, 86vw);
+  height: 6px;
+  background: var(--panel);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.modern-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #ff8fd0);
+  transition: width 90ms linear;
+}
+.era2026 .detail {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  opacity: 0.6;
+}
+.checklist {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  opacity: 0.45;
+  letter-spacing: 0.08em;
+}
+.checklist li.done {
+  opacity: 0.6;
+}
+.checklist li.active {
+  opacity: 1;
+  color: var(--accent);
+}
+.eula-box {
+  max-width: 60ch;
+  max-height: 34vh;
+  overflow-y: auto;
+  text-align: left;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 0.88rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+.qte-ring {
+  width: clamp(120px, 30vw, 200px);
+  height: clamp(120px, 30vw, 200px);
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+.era2026 .sub {
+  opacity: 0.5;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.era2026.cinematic {
+  background: #05070b;
+  color: #eef2f7;
+}
+.era2026.cinematic .bars {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #000 0 12%, transparent 12% 88%, #000 88% 100%);
+  pointer-events: none;
+}
+.credit-wall {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  justify-content: center;
+  max-width: 70ch;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  opacity: 0.4;
+  text-transform: uppercase;
+  animation: fadein 1.6s ease;
+}
+.era2026.cinematic h2 {
+  font-size: clamp(1.6rem, 6vw, 3.4rem);
+  animation: fadein 2.4s ease;
+}
