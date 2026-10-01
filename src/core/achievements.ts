@@ -29,4 +29,5 @@ export const SECRET_FRAGMENTS = [
   'secret:masher',
 ] as const;
 
-export const TOTAL_FRAGMENTS = 20;
+/** Every era is a fragment, plus the five that are hidden elsewhere. */
+export const totalFragments = (eraCount: number) => eraCount + SECRET_FRAGMENTS.length;

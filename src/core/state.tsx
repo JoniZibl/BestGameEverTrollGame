@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { loadProgress, saveProgress, wipeProgress, type Progress } from './storage';
-import { ACHIEVEMENTS, TOTAL_FRAGMENTS } from './achievements';
+import { ACHIEVEMENTS, totalFragments } from './achievements';
 import { audio } from './audio';
 import { ERAS } from '../games/registry';
 
@@ -239,7 +239,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     note,
     reset,
     fragmentCount,
-    totalFragments: TOTAL_FRAGMENTS,
+    totalFragments: totalFragments(ERAS.length),
     allErasDone,
   };
 

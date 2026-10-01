@@ -24,7 +24,8 @@ export function create1992(api: GameApi): MiniGame {
   const foe: Fighter = { x: 0.7, hp: 1, maxHp: 1, attack: 0, recover: 0, windup: 0, hurt: 0, down: 0, facing: -1 };
 
   const groundY = () => api.h * 0.78;
-  const scale = () => Math.min(api.w / 1000, api.h / 600) * 1.5;
+  // Fighters are sized off the stage height: on a phone the screen is tall, not wide.
+  const scale = () => (api.h / 600) * 1.25;
 
   const hit = (target: Fighter, dmg: number, from: number) => {
     target.hp = Math.max(0, target.hp - dmg);
@@ -158,12 +159,23 @@ export function create1992(api: GameApi): MiniGame {
       const s = scale();
       const gy = groundY();
 
+      // stage: floor, a back wall, and a crowd that never reacts
       ctx.fillStyle = api.colors.fg;
-      ctx.globalAlpha = 0.14;
+      ctx.globalAlpha = 0.16;
       ctx.fillRect(0, gy, api.w, api.h - gy);
-      for (let i = 0; i < 12; i++) {
-        ctx.fillRect((i / 12) * api.w, gy - 120 * s, 40 * s, 120 * s);
+      ctx.globalAlpha = 0.08;
+      ctx.fillRect(0, gy - 150 * s, api.w, 150 * s);
+      ctx.globalAlpha = 0.22;
+      for (let i = 0; i < 26; i++) {
+        const hx = (i / 26) * api.w + Math.sin(i * 2.3) * 6;
+        const hy = gy - 100 * s - (i % 3) * 16 * s + Math.sin(t * 2 + i) * 2;
+        ctx.beginPath();
+        ctx.arc(hx, hy, 9 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(hx - 9 * s, hy + 6 * s, 18 * s, 26 * s);
       }
+      ctx.globalAlpha = 0.1;
+      for (let i = 0; i < 14; i++) ctx.fillRect((i / 14) * api.w, gy, 3, api.h - gy);
       ctx.globalAlpha = 1;
 
       const drawFighter = (f: Fighter, color: string) => {
@@ -174,13 +186,39 @@ export function create1992(api: GameApi): MiniGame {
         ctx.globalAlpha = f.hurt > 0 && Math.floor(f.hurt * 40) % 2 ? 0.35 : 1;
         ctx.fillStyle = color;
         const big = f === foe && round === 3 ? 1.5 : 1;
-        ctx.scale(big, big);
-        ctx.fillRect(-14 * s, -96 * s, 28 * s, 60 * s); // torso
-        ctx.fillRect(-11 * s, -124 * s, 22 * s, 26 * s); // head
-        ctx.fillRect(-12 * s, -36 * s, 10 * s, 36 * s); // legs
-        ctx.fillRect(3 * s, -36 * s, 10 * s, 36 * s);
-        const reach = f.attack > 0 ? 42 * s : 16 * s;
-        ctx.fillRect(f.facing > 0 ? 12 * s : -12 * s - reach, -84 * s, reach, 10 * s);
+        ctx.scale(big * f.facing, big);
+        const punch = f.attack > 0;
+        const wind = f.windup > 0;
+        const bob = Math.sin(t * 4 + (f === foe ? 1 : 0)) * 2 * s;
+
+        // back leg, planted; front leg, forward: a stance, not a pair of sticks
+        ctx.fillRect(-22 * s, -34 * s, 12 * s, 34 * s);
+        ctx.fillRect(8 * s, -30 * s, 12 * s, 30 * s);
+        ctx.fillRect(-24 * s, -4 * s, 20 * s, 6 * s);
+        ctx.fillRect(6 * s, -4 * s, 22 * s, 6 * s);
+
+        // torso, leaning into the punch
+        ctx.save();
+        ctx.rotate(punch ? -0.12 : wind ? 0.1 : 0);
+        ctx.fillRect(-15 * s, (-92 + bob) * s, 30 * s, 60 * s);
+        // belt
+        ctx.fillStyle = api.colors.bg;
+        ctx.fillRect(-15 * s, (-44 + bob) * s, 30 * s, 7 * s);
+        ctx.fillStyle = color;
+
+        // head and hair
+        ctx.fillRect(-11 * s, (-120 + bob) * s, 22 * s, 26 * s);
+        ctx.fillRect(-13 * s, (-124 + bob) * s, 26 * s, 8 * s);
+        ctx.fillStyle = api.colors.bg;
+        ctx.fillRect(2 * s, (-112 + bob) * s, 6 * s, 5 * s);
+        ctx.fillStyle = color;
+
+        // rear arm, then the one doing the work
+        ctx.fillRect(-26 * s, (-86 + bob) * s, 12 * s, 11 * s);
+        const reach = punch ? 46 * s : wind ? 6 * s : 18 * s;
+        ctx.fillRect(13 * s, (-84 + bob) * s, reach, 11 * s);
+        ctx.fillRect(13 * s + reach, (-88 + bob) * s, 15 * s, 18 * s); // fist
+        ctx.restore();
         ctx.restore();
       };
 

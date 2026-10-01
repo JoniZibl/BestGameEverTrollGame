@@ -9,6 +9,7 @@ export type ThemeId =
   | 'bit8'         // 1984-1985 — 8-bit palette
   | 'bit16'        // 1992-1993 — 16-bit, gradients, bevels
   | 'early3d'      // 1996 — fog, low-poly, dithering
+  | 'lcd'          // 1997 — a phone screen with four shades
   | 'web2'         // 2000-2004 — glossy gradients, loading bars
   | 'flat'         // 2009-2013 — flat mobile UI
   | 'modern';      // 2017-2026 — clean, blurred, high fidelity

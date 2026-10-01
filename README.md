@@ -18,23 +18,30 @@ stays exactly where it was.
 
 | Year | Game | The twist |
 | --- | --- | --- |
-| 1962 | Two dots and a star | A gravity well with opinions, on a borrowed radar scope |
-| 1972 | Two rectangles | Second ball. Then eight. Then an absurd opponent paddle |
-| 1978 | Descending grid | The aliens learn to dodge, split, and follow you home |
-| 1980 | Dot management | The ghosts stop respecting walls, then swap roles with you |
-| 1984 | Falling shapes | x1 → x2 → x4 → x8 → x16, in under thirty seconds |
-| 1985 | Run and jump | Moving platforms, vanishing floor, patched physics, a scrolling deadline |
-| 1992 | Two fighters | Round one is a formality. Round two is a lesson |
-| 1993 | The third dimension | Raycast corridors, and a field of view that forgets itself |
-| 1996 | Actual polygons | Fog, wobbling vertices, and a sudden "12,000 POLYGONS" |
+| 1962 | Two Dots And A Star | A gravity well with opinions, on a borrowed radar scope |
+| 1972 | Two Rectangles | Second ball. Then eight. Then the controls reverse |
+| 1978 | Descending Grid | The aliens learn to dodge, split, and follow you home |
+| 1980 | Dot Management | The ghosts stop respecting walls, then swap roles with you |
+| 1981 | Barrel Climb | The ladders start moving. Nobody authorised this |
+| 1984 | Falling Shapes | x1 → x2 → x3 → x5 → x8 → x16, and four lines to find |
+| 1985 | Run And Jump | Moving platforms, vanishing floor, patched physics, a scrolling deadline |
+| 1991 | Loop Runner | It goes fast. Then faster. Then it stops asking |
+| 1992 | Two Fighters | Round one is a formality. Round three is enormous |
+| 1993 | The Third Dimension | Raycast corridors and a field of view that forgets itself |
+| 1994 | Four Words In A Box | You win. Another random encounter. You win. Another one |
+| 1996 | Actual Polygons | Fog, wobbling vertices, and a sudden "12,000 POLYGONS" |
+| 1997 | The Line That Grows | It speeds up, then the walls switch off |
 | 2000 | Connecting | A 56k handshake, a bar stuck at 8%, and 420ms of lag as a mechanic |
-| 2004 | Save the kingdom | Collect three mushrooms. Excellent. Now collect 47 more |
-| 2009 | Pocket sized | Energy empty. Wait seven hours. (Just kidding) |
-| 2013 | Some assembly required | The game is free. Jumping is €2.99 |
-| 2017 | Ninety-nine others | The other ninety-eight resolve themselves. The last one walks off the map |
-| 2020s | Please wait | Shaders, a day-one patch, a EULA, and then one button |
+| 2001 | Needs Management | A new need appears. Then the fridge becomes an expansion pack |
+| 2004 | Save The Kingdom | Collect three mushrooms. Excellent. Now collect 47 more |
+| 2009 | Tower Demolition | Energy empty. Wait seven hours. (Just kidding) |
+| 2011 | Block World | The sun sets, and something blocky wants a word |
+| 2013 | One Button, Two Pipes | The game is free. The gaps are €2.99 |
+| 2016 | Catch It | AR mode on, servers down, creature unimpressed |
+| 2017 | Ninety-Nine Others | The other ninety-eight resolve themselves. The last one walks off the map |
+| 2020s | Please Wait | Shaders, a day-one patch, a EULA, and then one button |
 
-Finish them all and the machine is repaired — which unlocks 2031, where the game
+Twenty-two years, each with the game everybody remembers from it. Finish them all and the machine is repaired — which unlocks 2031, where the game
 plays itself, very well, without you.
 
 ## Running it
@@ -93,7 +100,8 @@ src/
 1. Write `src/games/yXXXX.ts` exporting `createXXXX(api: GameApi): MiniGame`
    (`start` / `update(dt)` / `draw`), or a React component for UI-driven satire.
 2. Add an `Era` entry to `src/games/registry.ts` with its year, tagline, controls,
-   theme, a short historical fact and a `deepDive` for the LEARN MORE panel.
+   `touchControls`, `goal`, theme, a short historical fact and a `deepDive` for the
+   LEARN MORE panel.
 
 Everything else — unlocking, fragments, timeline position, result card, touch
 controls, the soundtrack switch — is wired from that one entry.
@@ -116,8 +124,8 @@ Losing never blocks the timeline: the game over screen offers TRY AGAIN and CONT
 ANYWAY, and the next year unlocks either way. But a **time fragment is only awarded
 for an actual win**, so a year you merely survived shows up on the timeline as
 `NO FRAGMENT · RETRY` and the machine stays broken until you go back and do it
-properly. All twenty fragments means winning all fifteen years and finding the five
-that are hidden somewhere else.
+properly. All twenty-seven fragments means winning all twenty-two years and finding the
+five that are hidden somewhere else.
 
 Each year states its win condition before it starts — survive 46 seconds, clear four
 lines, catch all three ghosts, find five crystals in the fog — and most of them get

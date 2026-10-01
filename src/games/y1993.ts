@@ -221,6 +221,18 @@ export function create1993(api: GameApi): MiniGame {
         ctx.globalAlpha = shade;
         ctx.fillStyle = api.colors.fg;
         ctx.fillRect(c * colW, H / 2 - lineH / 2, colW + 1, lineH);
+        // brick courses: cheap, but it stops the walls reading as flat paint
+        const hitX = side === 0 ? px.y + dist * rdy : px.x + dist * rdx;
+        const texU = hitX - Math.floor(hitX);
+        ctx.globalAlpha = shade * 0.5;
+        ctx.fillStyle = api.colors.bg;
+        const courses = 6;
+        for (let b = 1; b < courses; b++) {
+          ctx.fillRect(c * colW, H / 2 - lineH / 2 + (lineH / courses) * b, colW + 1, Math.max(1, lineH * 0.012));
+        }
+        if (texU < 0.06 || texU > 0.94) {
+          ctx.fillRect(c * colW, H / 2 - lineH / 2, colW + 1, lineH);
+        }
       }
       ctx.globalAlpha = 1;
 
@@ -264,6 +276,25 @@ export function create1993(api: GameApi): MiniGame {
         ctx.fill();
         ctx.restore();
       }
+
+      // status bar, the one thing every player of these remembers
+      const barH = Math.min(42, H * 0.08);
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = api.colors.bg;
+      ctx.fillRect(0, H - barH, W, barH);
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = api.colors.fg;
+      ctx.fillRect(0, H - barH, W, 2);
+      ctx.restore();
+      text(api, `HEALTH ${hp * 33}%`, 14, H - barH / 2, Math.min(15, W / 26), {
+        align: 'left',
+        kind: 'mono',
+      });
+      text(api, `LEFT ${TARGETS - kills}`, W - 14, H - barH / 2, Math.min(15, W / 26), {
+        align: 'right',
+        kind: 'mono',
+      });
 
       // crosshair
       ctx.strokeStyle = api.colors.accent;

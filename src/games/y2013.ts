@@ -1,44 +1,33 @@
 import type { GameApi, MiniGame } from '../core/types';
-import { aabb, clamp, fill, text } from './helpers';
+import { Script, fill, rand, text } from './helpers';
 
-const WORLD_H = 600;
-const GOAL = 3400;
+const W = 420;
+const H = 640;
+const GAP_BASE = 190;
 
-interface Plat {
+interface Pipe {
   x: number;
-  y: number;
-  w: number;
+  gapY: number;
+  passed?: boolean;
 }
 
-/** 2013 — the mechanics are fine. The business model is the obstacle. */
+/** 2013 — one button, two pipes, and a shop. */
 export function create2013(api: GameApi): MiniGame {
   let t = 0;
-  let jumpUnlocked = false;
-  let doubleUnlocked = false;
-  let gravityPaid = true;
-  let askedDouble = false;
-  let askedGravity = false;
-  let askedCheckpoint = false;
-  let checkpointX = 40;
+  let score = 0;
   let paused = false;
-  let jumpsUsed = 0;
+  let dead = false;
+  let gap = GAP_BASE;
+  let speed = 150;
   let purchases = 0;
-  const player = { x: 40, y: 380, vx: 0, vy: 0, w: 28, h: 36, onGround: false };
-  const plats: Plat[] = [
-    { x: -40, y: 460, w: 420 },
-    { x: 470, y: 460, w: 240 },
-    { x: 800, y: 400, w: 200 },
-    { x: 1090, y: 460, w: 180 },
-    { x: 1360, y: 330, w: 220 },
-    { x: 1680, y: 460, w: 200 },
-    { x: 1960, y: 430, w: 220 },
-    { x: 2270, y: 350, w: 180 },
-    { x: 2540, y: 440, w: 160 },
-    { x: 2800, y: 320, w: 200 },
-    { x: 3100, y: 430, w: 420 },
-  ];
+  let askedContinue = false;
+  let askedGap = false;
+  let askedBird = false;
+  const bird = { y: H / 2, vy: 0, rot: 0 };
+  const pipes: Pipe[] = [];
+  let spawn = 0;
 
-  const ask = (title: string, price: string, lines: string[], unlock: () => void) => {
+  const ask = (title: string, price: string, lines: string[], onBuy: () => void) => {
     paused = true;
     api.audio.blip(900, 0.12, 'sine', 0.2);
     api.popup({
@@ -52,140 +41,158 @@ export function create2013(api: GameApi): MiniGame {
       onPick: (v) => {
         paused = false;
         if (v === 'buy') purchases++;
-        unlock();
+        onBuy();
         api.say("Relax. We're not actually charging you.");
       },
     });
   };
 
+  const script = new Script([
+    {
+      at: 12,
+      run: () => {
+        if (askedGap) return;
+        askedGap = true;
+        ask('WIDER GAPS', '€2.99', ['The gaps are quite narrow.', 'They need not be.'], () => {
+          gap = GAP_BASE + 30;
+          window.setTimeout(() => {
+            gap = GAP_BASE - 10;
+            api.say('The wider gaps were a limited-time offer.');
+          }, 9000);
+        });
+      },
+    },
+    { at: 22, run: () => { speed = 190; api.shout('FASTER'); } },
+    {
+      at: 30,
+      run: () => {
+        if (askedBird) return;
+        askedBird = true;
+        ask('SKIN: SLIGHTLY DIFFERENT BIRD', '€4.99', ['It is the same bird.', 'It is a different colour.'], () => {});
+      },
+    },
+  ]);
+
+  const reset = () => {
+    bird.y = H / 2;
+    bird.vy = 0;
+    pipes.length = 0;
+    spawn = 0;
+    dead = false;
+  };
+
+  const crash = () => {
+    if (dead) return;
+    dead = true;
+    api.audio.noise(0.35, 0.3, 700);
+    if (!askedContinue) {
+      askedContinue = true;
+      ask('CONTINUE?', '€0.99', ['Carry on from where you fell.', 'A bargain, considering.'], () => {
+        reset();
+      });
+      return;
+    }
+    api.lose(`${score} pipe${score === 1 ? '' : 's'}. The bird is unbothered.`);
+  };
+
   return {
     start() {
+      spawn = 0.6;
     },
 
     update(dt) {
-      if (paused) return;
+      if (paused || dead) return;
       t += dt;
+      script.update(t);
 
-      player.vx = api.input.moveX * 270;
-      const wantsJump = api.input.jumpPressed;
-
-      if (wantsJump && !jumpUnlocked) {
-        ask('JUMP PACK', '€2.99', ['Unlock the ability to jump.', 'A core feature, now with ownership.'], () => {
-          jumpUnlocked = true;
-          player.vy = -690;
-        });
-        return;
+      if (api.input.jumpPressed || api.input.actionKeyPressed) {
+        bird.vy = -300;
+        api.audio.blip(520, 0.06, 'square', 0.15, 760);
       }
+      bird.vy += 1150 * dt;
+      bird.y += bird.vy * dt;
+      bird.rot = Math.max(-0.5, Math.min(1.2, bird.vy / 460));
 
-      if (wantsJump && jumpUnlocked) {
-        if (player.onGround) {
-          player.vy = -690;
-          jumpsUsed++;
-          api.audio.blip(430, 0.09, 'square', 0.18, 780);
-        } else if (!doubleUnlocked && !askedDouble && player.vy > -200) {
-          askedDouble = true;
-          ask('DOUBLE JUMP', '€4.99', ['Jump again, mid-air.', 'Physically impossible. Commercially essential.'], () => {
-            doubleUnlocked = true;
-            player.vy = -620;
-          });
+      spawn -= dt;
+      if (spawn <= 0) {
+        spawn = 1.55 - speed / 900;
+        pipes.push({ x: W + 40, gapY: rand(gap * 0.6 + 40, H - gap * 0.6 - 60) });
+      }
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        const p = pipes[i];
+        p.x -= speed * dt;
+        if (p.x < -90) pipes.splice(i, 1);
+        else if (!p.passed && p.x + 30 < 110) {
+          p.passed = true;
+          score++;
+          api.audio.blip(800, 0.06, 'square', 0.16, 1200);
+          if (score >= 14) {
+            api.win({
+              stat: purchases === 0 ? `${score} PIPES, NOTHING BOUGHT` : `${score} PIPES, ${purchases} "PURCHASES"`,
+              score,
+            });
+            return;
+          }
+        }
+        const inX = 110 + 18 > p.x && 110 - 18 < p.x + 60;
+        if (inX && (bird.y - 16 < p.gapY - gap / 2 || bird.y + 16 > p.gapY + gap / 2)) {
+          crash();
           return;
-        } else if (doubleUnlocked && jumpsUsed % 2 === 1) {
-          player.vy = -620;
-          jumpsUsed++;
-          api.audio.blip(520, 0.09, 'square', 0.18, 880);
         }
       }
 
-      if (!askedCheckpoint && player.x > 1900) {
-        askedCheckpoint = true;
-        ask('CHECKPOINT PACK', '\u20ac1.99', ['Save your progress here.', 'Progress is a premium feature.'], () => {
-          checkpointX = player.x;
-        });
+      if (bird.y > H - 30 || bird.y < -20) {
+        crash();
         return;
       }
 
-      if (!askedGravity && t > 14) {
-        askedGravity = true;
-        gravityPaid = false;
-        ask('GRAVITY', '€0.99 / MONTH', ['Your gravity subscription has lapsed.', 'Renew to continue falling normally.'], () => {
-          gravityPaid = true;
-        });
-        return;
-      }
-
-      player.vy += (gravityPaid ? 1900 : 280) * dt;
-      player.x += player.vx * dt;
-      player.y += player.vy * dt;
-      player.onGround = false;
-      for (const p of plats) {
-        if (
-          aabb({ x: player.x, y: player.y, w: player.w, h: player.h }, { x: p.x, y: p.y, w: p.w, h: 40 }) &&
-          player.vy >= 0 &&
-          player.y + player.h - player.vy * dt <= p.y + 14
-        ) {
-          player.y = p.y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-          jumpsUsed = 0;
-        }
-      }
-
-      if (player.y > WORLD_H + 100) {
-        player.x = Math.max(checkpointX, player.x - 320);
-        player.y = 200;
-        player.vy = 0;
-        api.say('Respawn is free. For now.');
-      }
-
-      if (player.x > GOAL) {
-        api.win({
-          stat: purchases === 0 ? 'ZERO PURCHASES MADE' : `${purchases} IMAGINARY PURCHASES`,
-        });
-        return;
-      }
-
-      api.hud(
-        `${Math.round(clamp((player.x / GOAL) * 100, 0, 100))}%    OWNED: ${[
-          jumpUnlocked && 'JUMP',
-          doubleUnlocked && 'DOUBLE JUMP',
-          gravityPaid && 'GRAVITY',
-        ]
-          .filter(Boolean)
-          .join(', ') || 'NOTHING'}`,
-      );
+      api.hud(`PIPES ${score}/14`);
     },
 
     draw() {
       const { ctx } = api;
       fill(api);
-      const s = api.h / WORLD_H;
-      const camX = clamp(player.x - api.w / s / 2.6, 0, GOAL);
+      const s = Math.min(api.w / W, api.h / H);
       ctx.save();
+      ctx.translate((api.w - W * s) / 2, (api.h - H * s) / 2);
       ctx.scale(s, s);
-      ctx.translate(-camX, 0);
 
       ctx.fillStyle = api.colors.fg;
-      plats.forEach((p) => {
-        ctx.globalAlpha = 0.9;
-        ctx.fillRect(p.x, p.y, p.w, 40);
-        ctx.globalAlpha = 0.2;
-        ctx.fillRect(p.x, p.y + 40, p.w, 160);
-      });
+      ctx.globalAlpha = 0.14;
+      ctx.fillRect(0, H - 26, W, 26);
       ctx.globalAlpha = 1;
 
-      ctx.fillRect(GOAL + 40, 250, 8, 210);
-      ctx.fillRect(GOAL + 48, 250, 70, 44);
+      pipes.forEach((p) => {
+        ctx.fillStyle = api.colors.accent;
+        ctx.fillRect(p.x, 0, 60, p.gapY - gap / 2);
+        ctx.fillRect(p.x - 6, p.gapY - gap / 2 - 22, 72, 22);
+        ctx.fillRect(p.x, p.gapY + gap / 2, 60, H - (p.gapY + gap / 2));
+        ctx.fillRect(p.x - 6, p.gapY + gap / 2, 72, 22);
+        ctx.fillStyle = api.colors.bg;
+        ctx.globalAlpha = 0.2;
+        ctx.fillRect(p.x + 10, 0, 8, p.gapY - gap / 2);
+        ctx.fillRect(p.x + 10, p.gapY + gap / 2, 8, H);
+        ctx.globalAlpha = 1;
+      });
 
-      ctx.fillStyle = api.colors.accent;
-      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.save();
+      ctx.translate(110, bird.y);
+      ctx.rotate(bird.rot);
+      ctx.fillStyle = api.colors.fg;
+      ctx.fillRect(-18, -14, 36, 28);
+      ctx.fillStyle = api.colors.warn;
+      ctx.fillRect(14, -4, 12, 8);
       ctx.fillStyle = api.colors.bg;
-      ctx.fillRect(player.x + (player.vx < 0 ? 4 : 14), player.y + 9, 8, 7);
+      ctx.fillRect(4, -9, 9, 9);
+      ctx.fillStyle = api.colors.fg;
+      ctx.fillRect(6, -7, 4, 5);
+      ctx.fillStyle = api.colors.bg;
+      const flap = Math.sin(t * 18) * 5;
+      ctx.fillRect(-14, -2 + flap, 16, 8);
+      ctx.restore();
       ctx.restore();
 
-      text(api, '2013', 18, 22, 14, { align: 'left', kind: 'ui', alpha: 0.5 });
-      if (!jumpUnlocked) {
-        text(api, 'TRY JUMPING', api.w / 2, api.h * 0.22, Math.min(34, api.w / 16), { alpha: 0.5 });
-      }
+      text(api, `${score}`, api.w / 2, api.h * 0.12, Math.min(52, api.w / 7), { alpha: 0.25 });
     },
   } satisfies MiniGame;
 }

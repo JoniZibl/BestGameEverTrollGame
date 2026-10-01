@@ -77,6 +77,15 @@
   background: radial-gradient(ellipse at center, transparent 42%, color-mix(in srgb, var(--bg) 88%, transparent) 100%);
 }
 
+/* 1997 — a phone screen: four shades of nothing. */
+.stage[data-era='lcd'] {
+  --bg: #cbd3b4;
+  --fg: #2f3826;
+  --dim: #8c9677;
+  --accent: #46523a;
+  --stage-scan: 0.05;
+}
+
 /* 2000–2004 — the glossy web, but only inside the screen. */
 .stage[data-era='web2'] {
   --bg: #eef2f7;

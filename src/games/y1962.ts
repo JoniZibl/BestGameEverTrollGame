@@ -258,9 +258,19 @@ export function create1962(api: GameApi): MiniGame {
       }
       ctx.restore();
 
-      // rival
-      const rs = mercy ? 34 : shrink ? 6 : 9;
-      ctx.strokeRect(rival.x - rs, rival.y - rs, rs * 2, rs * 2);
+      // rival: the other ship, pointing where it is going
+      const rs = mercy ? 30 : shrink ? 8 : 12;
+      ctx.save();
+      ctx.translate(rival.x, rival.y);
+      ctx.rotate(Math.atan2(rival.vy, rival.vx));
+      ctx.beginPath();
+      ctx.moveTo(rs, 0);
+      ctx.lineTo(-rs * 0.7, rs * 0.75);
+      ctx.lineTo(-rs * 0.25, 0);
+      ctx.lineTo(-rs * 0.7, -rs * 0.75);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
 
       ctx.globalAlpha = fade;
       shots.forEach((s) => {

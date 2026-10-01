@@ -34,6 +34,8 @@ export function create1978(api: GameApi): MiniGame {
   let px = 0;
   const aliens: Alien[] = [];
   const shots: Shot[] = [];
+  /** Four shields, each a grid of chunks that both sides can chew through. */
+  const bunkers: { x: number; y: number; cells: boolean[][] }[] = [];
 
   const u = () => Math.min(api.w, api.h) / 600;
   const playerW = () => 46 * u() * 1.4;
@@ -81,9 +83,52 @@ export function create1978(api: GameApi): MiniGame {
     { at: 38, run: () => spawnBoss() },
   ]);
 
+  const buildBunkers = () => {
+    bunkers.length = 0;
+    const scale = u() * 1.4;
+    const bw = 7;
+    const bh = 4;
+    for (let i = 0; i < 4; i++) {
+      const cells: boolean[][] = [];
+      for (let y = 0; y < bh; y++) {
+        cells[y] = [];
+        for (let x = 0; x < bw; x++) {
+          // notch out the underside arch
+          cells[y][x] = !(y >= bh - 2 && x > 1 && x < bw - 2);
+        }
+      }
+      bunkers.push({
+        x: api.w * (0.14 + i * 0.24),
+        y: api.h - 120 * scale,
+        cells,
+      });
+    }
+  };
+
+  /** Returns true when the shot chewed a hole instead of flying on. */
+  const hitBunker = (x: number, y: number) => {
+    const scale = u() * 1.4;
+    const cs = 9 * scale;
+    for (const b of bunkers) {
+      for (let cy = 0; cy < b.cells.length; cy++) {
+        for (let cx = 0; cx < b.cells[cy].length; cx++) {
+          if (!b.cells[cy][cx]) continue;
+          const bx = b.x + cx * cs;
+          const by = b.y + cy * cs;
+          if (x > bx && x < bx + cs && y > by && y < by + cs) {
+            b.cells[cy][cx] = false;
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   return {
     start() {
       px = api.w / 2;
+      buildBunkers();
       spawnWave();
     },
 
@@ -157,6 +202,11 @@ export function create1978(api: GameApi): MiniGame {
           shots.splice(i, 1);
           continue;
         }
+        if (hitBunker(s.x, s.y)) {
+          shots.splice(i, 1);
+          api.audio.noise(0.06, 0.12, 1800);
+          continue;
+        }
         if (s.from === 'player') {
           for (let j = aliens.length - 1; j >= 0; j--) {
             const a = aliens[j];
@@ -220,6 +270,17 @@ export function create1978(api: GameApi): MiniGame {
       ctx.fillRect(px - pw / 2, playerY(), pw, 10 * scale);
       ctx.fillRect(px - pw / 6, playerY() - 10 * scale, pw / 3, 10 * scale);
       ctx.fillRect(px - 3 * scale, playerY() - 18 * scale, 6 * scale, 8 * scale);
+
+      // bunkers
+      const cs = 9 * scale;
+      ctx.fillStyle = api.colors.fg;
+      bunkers.forEach((b) => {
+        b.cells.forEach((row, cy) =>
+          row.forEach((on, cx) => {
+            if (on) ctx.fillRect(b.x + cx * cs, b.y + cy * cs, cs - 1, cs - 1);
+          }),
+        );
+      });
 
       aliens.forEach((a) => {
         const s = a.size;

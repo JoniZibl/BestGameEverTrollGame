@@ -71,6 +71,16 @@ const MUSIC: Record<ThemeId, EraMusic> = {
     decay: 0.5,
     reverb: 0.25,
   },
+  lcd: {
+    bpm: 128,
+    wave: 'square',
+    bassWave: 'square',
+    lead: [84, 0, 79, 0, 76, 0, 79, 0, 81, 0, 77, 0, 74, 0, 77, 0],
+    bass: [45, 0, 0, 0, 41, 0, 0, 0, 43, 0, 0, 0, 38, 0, 0, 0],
+    cutoff: 2200,
+    decay: 0.08,
+    gain: 0.7,
+  },
   web2: {
     bpm: 124,
     wave: 'sawtooth',

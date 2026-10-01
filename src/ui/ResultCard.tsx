@@ -14,7 +14,7 @@ const sentences = (text: string) =>
     .filter(Boolean);
 
 export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: string }) {
-  const { go, openEra, markDeepDive, progress } = useGame();
+  const { go, openEra, markDeepDive, allErasDone } = useGame();
   const [step, setStep] = useState<Step>('head');
   const [page, setPage] = useState(0);
   const next = nextEra(era.id);
@@ -154,7 +154,7 @@ export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: 
             ) : (
               <button
                 className="btn huge"
-                onClick={() => go(progress.fragments.length >= 15 ? 'ending' : 'machine')}
+                onClick={() => go(allErasDone ? 'ending' : 'machine')}
               >
                 BACK TO THE MACHINE
               </button>

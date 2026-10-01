@@ -15,6 +15,12 @@ interface Plat {
   base: number;
 }
 
+interface Coin {
+  x: number;
+  y: number;
+  taken?: boolean;
+}
+
 interface Walker {
   x: number;
   y: number;
@@ -37,6 +43,8 @@ export function create1985(api: GameApi): MiniGame {
   let jumpV = -720;
   const plats: Plat[] = [];
   const walkers: Walker[] = [];
+  const coins: Coin[] = [];
+  let picked = 0;
   const player = { x: 60, y: 300, vx: 0, vy: 0, w: 28, h: 36, onGround: false };
   let checkpoint = { x: 60, y: 300 };
   let coyote = 0;
@@ -58,6 +66,16 @@ export function create1985(api: GameApi): MiniGame {
       const w = 130 + rnd() * 160;
       y = clamp(y + (rnd() - 0.5) * 170, 240, 500);
       plats.push({ x: x + gap, y, w, h: 30, amp: 24 + rnd() * 40, phase: rnd() * 6.3, vanished: 0, base: y });
+      // a short arc of coins over most gaps, because that is what they are for
+      if (rnd() < 0.8) {
+        const n = 3 + Math.floor(rnd() * 3);
+        for (let i = 0; i < n; i++) {
+          coins.push({
+            x: x + gap * (i + 1) / (n + 1) + 10,
+            y: y - 90 - Math.sin(((i + 1) / (n + 1)) * Math.PI) * 46,
+          });
+        }
+      }
       if (rnd() < 0.45) {
         walkers.push({
           x: x + gap + w * 0.5,
@@ -192,6 +210,15 @@ export function create1985(api: GameApi): MiniGame {
         }
       }
 
+      for (const c of coins) {
+        if (c.taken) continue;
+        if (Math.abs(c.x - player.x - 14) < 26 && Math.abs(c.y - player.y - 18) < 30) {
+          c.taken = true;
+          picked++;
+          api.audio.blip(980, 0.07, 'square', 0.16, 1500);
+        }
+      }
+
       if (player.y > WORLD_H + 80) {
         die('Fell off the world.');
         return;
@@ -201,31 +228,43 @@ export function create1985(api: GameApi): MiniGame {
         return;
       }
       if (player.x > GOAL_X + 120) {
-        api.win({ stat: `REACHED THE FLAG IN ${t.toFixed(0)}s`, score: Math.round(player.x) });
+        api.win({ stat: `FLAG REACHED \u00b7 ${picked} COINS`, score: picked });
         return;
       }
 
-      api.hud(`LIVES ${lives}    ${Math.round(clamp((player.x / GOAL_X) * 100, 0, 100))}%`);
+      api.hud(
+        `LIVES ${lives}    COINS ${picked}    ${Math.round(clamp((player.x / GOAL_X) * 100, 0, 100))}%`,
+      );
     },
 
     draw() {
       const { ctx } = api;
       fill(api);
-      const s = api.h / WORLD_H;
+      const s = Math.min(api.h / WORLD_H, api.w / 560);
       const camX = clamp(player.x - api.w / s / 2.6, camMin, GOAL_X + 400);
 
       ctx.save();
+      ctx.translate(0, api.h - WORLD_H * s);
       ctx.scale(s, s);
       ctx.translate(-camX, 0);
       ctx.fillStyle = api.colors.fg;
 
-      // background hills, drawn as blocks because 1985
+      // hills and clouds, drawn as blocks because 1985
       ctx.save();
       ctx.globalAlpha = 0.12;
       for (let i = 0; i < 40; i++) {
         const hx = i * 220 - (camX % 220) + camX - 220;
         ctx.fillRect(hx, 430, 120, 200);
         ctx.fillRect(hx + 30, 390, 60, 60);
+      }
+      ctx.globalAlpha = 0.18;
+      for (let i = 0; i < 20; i++) {
+        const cx2 = i * 420 - ((camX * 0.6) % 420) + camX - 420;
+        const cy2 = 90 + (i % 3) * 46;
+        ctx.fillRect(cx2, cy2, 86, 26);
+        ctx.fillRect(cx2 + 18, cy2 - 18, 50, 24);
+        ctx.fillRect(cx2 - 14, cy2 + 8, 28, 18);
+        ctx.fillRect(cx2 + 72, cy2 + 8, 28, 18);
       }
       ctx.restore();
 
@@ -234,8 +273,13 @@ export function create1985(api: GameApi): MiniGame {
         ctx.save();
         ctx.globalAlpha = p.vanished > 0 ? clamp(1 - p.vanished * 2.2, 0, 1) : 1;
         ctx.fillRect(p.x, p.y, p.w, p.h);
+        // brick courses
         ctx.fillStyle = api.colors.bg;
-        for (let bx = p.x + 8; bx < p.x + p.w - 8; bx += 26) ctx.fillRect(bx, p.y + 10, 14, 3);
+        ctx.globalAlpha *= 0.55;
+        for (let by = p.y + 10; by < p.y + p.h; by += 14) ctx.fillRect(p.x, by, p.w, 2);
+        for (let bx = p.x; bx < p.x + p.w; bx += 26) {
+          ctx.fillRect(bx + ((Math.floor((bx - p.x) / 26) % 2) * 13), p.y, 2, p.h);
+        }
         ctx.restore();
         ctx.fillStyle = api.colors.fg;
       });
@@ -249,16 +293,51 @@ export function create1985(api: GameApi): MiniGame {
         ctx.fillRect(wk.x + 3, wk.y - 2, 5, 5);
       });
 
-      // flag
-      ctx.fillStyle = api.colors.fg;
-      ctx.fillRect(GOAL_X + 150, 250, 8, 180);
-      ctx.fillRect(GOAL_X + 158, 250, 70, 44);
+      // coins
+      coins.forEach((c) => {
+        if (c.taken || c.x < camX - 40 || c.x > camX + api.w / s + 40) return;
+        const w = 10 + Math.abs(Math.sin(t * 5 + c.x * 0.01)) * 10;
+        ctx.fillStyle = api.colors.warn;
+        ctx.fillRect(c.x - w / 2, c.y - 13, w, 26);
+        ctx.fillStyle = api.colors.bg;
+        ctx.globalAlpha = 0.45;
+        ctx.fillRect(c.x - w / 4, c.y - 7, Math.max(2, w / 2), 14);
+        ctx.globalAlpha = 1;
+      });
 
-      // player
+      // flagpole
       ctx.fillStyle = api.colors.fg;
-      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.fillRect(GOAL_X + 150, 190, 8, 240);
+      ctx.fillRect(GOAL_X + 142, 182, 24, 10);
+      ctx.fillStyle = api.colors.accent;
+      ctx.beginPath();
+      ctx.moveTo(GOAL_X + 158, 198);
+      ctx.lineTo(GOAL_X + 226, 216);
+      ctx.lineTo(GOAL_X + 158, 234);
+      ctx.closePath();
+      ctx.fill();
+
+      // the runner: cap, face, overall-ish body, two legs that actually move
+      const facing = player.vx < 0 ? -1 : 1;
+      const stride = player.onGround ? Math.sin(t * 16) * 5 : 4;
+      ctx.save();
+      ctx.translate(player.x + player.w / 2, player.y);
+      ctx.scale(facing, 1);
+      ctx.fillStyle = api.colors.accent;
+      ctx.fillRect(-11, -2, 22, 8); // cap
+      ctx.fillRect(1, 0, 12, 5); // peak
+      ctx.fillStyle = api.colors.fg;
+      ctx.fillRect(-9, 6, 18, 10); // head
       ctx.fillStyle = api.colors.bg;
-      ctx.fillRect(player.x + (player.vx < 0 ? 4 : 14), player.y + 9, 8, 7);
+      ctx.fillRect(2, 9, 4, 4); // eye
+      ctx.fillStyle = api.colors.accent;
+      ctx.fillRect(-11, 16, 22, 13); // torso
+      ctx.fillStyle = api.colors.fg;
+      ctx.fillRect(-15, 17, 5, 9); // arms
+      ctx.fillRect(10, 17, 5, 9);
+      ctx.fillRect(-9, 29, 7, 7 + stride); // legs
+      ctx.fillRect(2, 29, 7, 7 - stride);
+      ctx.restore();
       ctx.restore();
 
       text(api, '1985', 18, 22, 14, { align: 'left', kind: 'mono', alpha: 0.5 });
