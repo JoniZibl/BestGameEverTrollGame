@@ -65,7 +65,6 @@ export function create1996(api: GameApi): MiniGame {
   let quantize = 4;
   let far = 20;
   const NEEDED = 5;
-  let dragX: number | null = null;
   let polyLabel = 412;
   let remastered = false;
   const cam = { x: 0, y: 1.6, z: -6, yaw: 0, bob: 0 };
@@ -80,8 +79,11 @@ export function create1996(api: GameApi): MiniGame {
     for (let i = 0; i < 26; i++) {
       const a = rnd() * Math.PI * 2;
       const r = 6 + rnd() * 24;
+      const pos = { x: Math.cos(a) * r, y: 0, z: Math.sin(a) * r };
+      // Keep the spawn clearing empty, so nobody starts inside a building.
+      if (Math.hypot(pos.x - 0, pos.z + 6) < 7) continue;
       shapes.push({
-        pos: { x: Math.cos(a) * r, y: 0, z: Math.sin(a) * r },
+        pos,
         verts: CUBE.verts,
         faces: CUBE.faces,
         scale: 0.6 + rnd() * 1.6,
@@ -99,6 +101,15 @@ export function create1996(api: GameApi): MiniGame {
       shapes.push({ pos: p, verts: OCTA.verts, faces: OCTA.faces, scale: 1.1, spin: 1.4, crystal: true }),
     );
   };
+
+  const blocked = (x: number, z: number) =>
+    shapes.some(
+      (s) =>
+        !s.crystal &&
+        // The block's half-width plus enough clearance that it never fills the view.
+        Math.abs(x - s.pos.x) < s.scale + 1.6 &&
+        Math.abs(z - s.pos.z) < s.scale + 1.6,
+    );
 
   const script = new Script([
     { at: 2, run: () => api.say('LOOK AT THESE GRAPHICS.') },
@@ -121,23 +132,19 @@ export function create1996(api: GameApi): MiniGame {
   return {
     start() {
       build();
-      api.say('MOVE: ↑   TURN: ← →');
     },
 
     update(dt) {
       t += dt;
       script.update(t);
-      cam.yaw += api.input.axisX * 1.9 * dt;
-      // Drag to look, for anyone without arrow keys to hand.
-      if (api.input.pointerDown) {
-        if (dragX !== null) cam.yaw += (api.input.pointerX - dragX) * 0.006;
-        dragX = api.input.pointerX;
-      } else {
-        dragX = null;
-      }
-      const fwd = (api.input.up ? 1 : 0) - (api.input.downKey ? 1 : 0);
-      cam.x += Math.sin(cam.yaw) * fwd * 6.5 * dt;
-      cam.z += Math.cos(cam.yaw) * fwd * 6.5 * dt;
+      // Drag sideways to turn, upwards to walk.
+      cam.yaw += (api.input.axisX + api.input.joyX * 1.25) * 1.9 * dt;
+      const fwd = (api.input.up ? 1 : 0) - (api.input.downKey ? 1 : 0) - api.input.joyY;
+      const stepX = Math.sin(cam.yaw) * fwd * 6.5 * dt;
+      const stepZ = Math.cos(cam.yaw) * fwd * 6.5 * dt;
+      // Axis-separated collision, so sliding along a block still works.
+      if (!blocked(cam.x + stepX, cam.z)) cam.x += stepX;
+      if (!blocked(cam.x, cam.z + stepZ)) cam.z += stepZ;
       cam.bob += Math.abs(fwd) * dt * 7;
       cam.y = 1.6 + Math.sin(cam.bob) * 0.07;
 
@@ -171,7 +178,7 @@ export function create1996(api: GameApi): MiniGame {
       fill(api);
       const W = api.w;
       const H = api.h;
-      const focal = Math.min(W, H) * 0.9;
+      const focal = Math.min(W, H) * 0.78;
       // Camera basis must match the movement basis below: forward = (sin yaw, cos yaw).
       const cos = Math.cos(cam.yaw);
       const sin = Math.sin(cam.yaw);

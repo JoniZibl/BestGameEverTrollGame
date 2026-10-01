@@ -50,9 +50,23 @@ No backend. Progress lives in `localStorage`.
 
 ## Controls
 
-Keyboard and mouse on desktop (arrows / WASD, space, click), on-screen buttons on
-touch devices. Every game states its controls in one line and never explains more
-than that.
+Keyboard and mouse on desktop (arrows / WASD, space, click). On a phone, **one
+finger, no buttons** — every year is driven by a gesture that suits it:
+
+| Gesture | Where |
+| --- | --- |
+| Slide your thumb | 1972 paddle, 1978 ship — the thing follows your finger, and holding also fires |
+| Hold and steer | 1962 (the ship turns toward your finger, thrusts, and fires by itself), 2017 |
+| Swipe | 1980 maze — a flick commits a direction instantly; holding and steering keeps it |
+| Swipe + tap | 1984 — sideways to move, down to drop, tap to rotate |
+| Drag + tap | 1985 and 2013 run by dragging and jump on a tap or an upward flick; 1992 moves by dragging and punches on a tap |
+| Drag to look | 1993 and 1996 — sideways turns, forwards walks, a tap shoots |
+
+A finger pressed on the playfield becomes a floating joystick whose anchor trails
+the finger, so reversing direction costs a flick instead of a trip back across the
+screen. A second finger is always a plain button, for anyone who would rather run
+and jump at the same time. Each year states its gesture in one line when it starts,
+and never explains more than that.
 
 ## How it is put together
 

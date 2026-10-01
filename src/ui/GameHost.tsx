@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Era, GameApi, MiniGame, PopupRequest, WinPayload } from '../core/types';
 import { Input } from '../core/input';
 import { audio } from '../core/audio';
-import { TouchPad } from './TouchPad';
 import { useGame } from '../core/state';
 
 const FONTS: Record<string, string> = {
@@ -103,6 +102,9 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
       audio,
       colors,
       font: (px, kind = 'display') => `${px}px ${FONTS[kind]}`,
+      get isTouch() {
+        return input.coarse;
+      },
       say: (text, ms = 2600) => {
         setCaption(text);
         captionTimer = ms / 1000;
@@ -119,6 +121,8 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
 
     const game: MiniGame = era.play.create(api);
     game.start?.();
+    // One control hint per game, phrased for whatever the player is holding.
+    api.say(input.coarse ? era.touchControls : era.controls, 3400);
 
     let raf = 0;
     let last = performance.now();
@@ -213,7 +217,6 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
           </div>
         ) : null}
       </div>
-      <TouchPad controls={era.touch} input={inputRef.current} />
     </div>
   );
 }

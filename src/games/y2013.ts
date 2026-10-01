@@ -60,15 +60,14 @@ export function create2013(api: GameApi): MiniGame {
 
   return {
     start() {
-      api.say('MOVE: ← →   JUMP: SPACE');
     },
 
     update(dt) {
       if (paused) return;
       t += dt;
 
-      player.vx = api.input.axisX * 270;
-      const wantsJump = api.input.upPressed || api.input.actionPressed;
+      player.vx = api.input.moveX * 270;
+      const wantsJump = api.input.jumpPressed;
 
       if (wantsJump && !jumpUnlocked) {
         ask('JUMP PACK', '€2.99', ['Unlock the ability to jump.', 'A core feature, now with ownership.'], () => {

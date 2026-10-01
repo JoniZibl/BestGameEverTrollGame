@@ -47,7 +47,6 @@ export function create1993(api: GameApi): MiniGame {
     { x: 14.5, y: 8.5, alive: true, hurt: 0 },
   ];
   const TARGETS = sprites.length;
-  let dragX: number | null = null;
 
   const solid = (x: number, y: number) => {
     const row = MAP[Math.floor(y)];
@@ -73,7 +72,6 @@ export function create1993(api: GameApi): MiniGame {
 
   return {
     start() {
-      api.say('MOVE: ↑ ↓   TURN: ← →   SHOOT: SPACE');
     },
 
     update(dt) {
@@ -83,21 +81,15 @@ export function create1993(api: GameApi): MiniGame {
       flash = Math.max(0, flash - dt * 4);
       fov = 0.66 + (fovWarp ? Math.sin(t * 2.2) * 1.5 + 1.4 : 0);
 
-      px.dir += api.input.axisX * 2.1 * dt;
-      // Drag anywhere to look around; the trigger stays on the key.
-      if (api.input.pointerDown) {
-        if (dragX !== null) px.dir += (api.input.pointerX - dragX) * 0.006;
-        dragX = api.input.pointerX;
-      } else {
-        dragX = null;
-      }
-      const mv = (api.input.up ? 1 : 0) - (api.input.downKey ? 1 : 0);
+      // Drag sideways to turn, forwards to walk. The trigger is a tap.
+      px.dir += (api.input.axisX + api.input.joyX * 1.25) * 2.1 * dt;
+      const mv = (api.input.up ? 1 : 0) - (api.input.downKey ? 1 : 0) - api.input.joyY;
       const nx = px.x + Math.cos(px.dir) * mv * 2.6 * dt;
       const ny = px.y + Math.sin(px.dir) * mv * 2.6 * dt;
       if (!solid(nx, px.y)) px.x = nx;
       if (!solid(px.x, ny)) px.y = ny;
 
-      if (api.input.actionKeyPressed && cool <= 0) {
+      if (api.input.firePressed && cool <= 0) {
         cool = 0.45;
         flash = 1;
         api.audio.noise(0.18, 0.35, 2600);

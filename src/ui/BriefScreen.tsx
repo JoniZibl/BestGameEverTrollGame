@@ -1,8 +1,13 @@
+import { useEffect, useState } from 'react';
 import { useGame } from '../core/state';
 import { audio } from '../core/audio';
 
 export function BriefScreen() {
   const { era, go } = useGame();
+  const [touch, setTouch] = useState(false);
+  useEffect(() => {
+    setTouch(window.matchMedia?.('(pointer: coarse)').matches ?? false);
+  }, []);
   if (!era) return null;
 
   const start = () => {
@@ -22,7 +27,7 @@ export function BriefScreen() {
       <p className="brief-goal">
         <span>GOAL</span> {era.goal}
       </p>
-      <p className="brief-controls">{era.controls}</p>
+      <p className="brief-controls">{touch ? era.touchControls : era.controls}</p>
       <div className="brief-actions">
         <button className="btn huge" onClick={start}>
           PLAY {era.label}

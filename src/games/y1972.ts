@@ -130,7 +130,6 @@ export function create1972(api: GameApi): MiniGame {
   return {
     start() {
       spawnBall(-1);
-      api.say('MOVE: ← →  or slide your thumb');
     },
 
     update(dt) {
@@ -142,7 +141,7 @@ export function create1972(api: GameApi): MiniGame {
       const pw = paddleW * api.w;
       if (api.input.left || api.input.right) {
         playerX += api.input.axisX * (mirror ? -1 : 1) * 1.25 * dt;
-      } else if (api.input.pointerX > 0) {
+      } else if (api.input.pointerDown || !api.input.coarse) {
         const want = mirror ? 1 - api.input.pointerX / api.w : api.input.pointerX / api.w;
         playerX += (want - playerX) * clamp(dt * 12, 0, 1);
       }

@@ -121,18 +121,25 @@ export function create1980(api: GameApi): MiniGame {
     start() {
       build();
       spawnGhosts();
-      api.say('MOVE: ARROW KEYS');
     },
 
     update(dt) {
       t += dt;
       script.update(t);
 
-      if (api.input.axisX) {
-        wantX = api.input.axisX;
+      // A swipe commits a direction instantly; holding and steering keeps it.
+      const sw = api.input.swipe;
+      if (sw === 'left' || sw === 'right') {
+        wantX = sw === 'left' ? -1 : 1;
         wantY = 0;
-      } else if (api.input.axisY) {
-        wantY = api.input.axisY;
+      } else if (sw === 'up' || sw === 'down') {
+        wantY = sw === 'up' ? -1 : 1;
+        wantX = 0;
+      } else if (api.input.dirX) {
+        wantX = api.input.dirX;
+        wantY = 0;
+      } else if (api.input.dirY) {
+        wantY = api.input.dirY;
         wantX = 0;
       }
 

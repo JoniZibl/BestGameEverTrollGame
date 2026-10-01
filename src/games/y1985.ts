@@ -127,7 +127,6 @@ export function create1985(api: GameApi): MiniGame {
   return {
     start() {
       build();
-      api.say('MOVE: ← →   JUMP: SPACE');
     },
 
     update(dt) {
@@ -139,9 +138,9 @@ export function create1985(api: GameApi): MiniGame {
         p.y = p.base + (moving && p.amp ? Math.sin(t * 1.6 + p.phase) * p.amp : 0);
       }
 
-      const want = api.input.axisX * 300;
+      const want = api.input.moveX * 300;
       player.vx = slippery ? player.vx + (want - player.vx) * dt * 1.8 : want;
-      if ((api.input.upPressed || api.input.actionPressed) && (player.onGround || coyote > 0)) {
+      if (api.input.jumpPressed && (player.onGround || coyote > 0)) {
         player.vy = jumpV;
         player.onGround = false;
         coyote = 0;

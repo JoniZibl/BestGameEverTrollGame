@@ -54,6 +54,8 @@ export interface GameApi {
   /** Theme palette, already resolved from CSS. */
   colors: { bg: string; fg: string; dim: string; accent: string; warn: string };
   font(px: number, kind?: FontKind): string;
+  /** True when the player is using a finger, not a mouse. */
+  readonly isTouch: boolean;
 }
 
 export type FontKind = 'display' | 'pixel' | 'mono' | 'ui';
@@ -82,13 +84,6 @@ export type EraPlay =
   | { kind: 'canvas'; create: (api: GameApi) => MiniGame }
   | { kind: 'react'; Component: ComponentType<ReactGameProps> };
 
-export interface TouchControlSet {
-  dpad?: boolean;
-  horizontal?: boolean;
-  action?: string | false;
-  pointer?: boolean;
-}
-
 export interface EraDeepDive {
   developer: string;
   release: string;
@@ -107,6 +102,8 @@ export interface Era {
   /** One dry line shown before the game starts. */
   tagline: string[];
   controls: string;
+  /** The same thing, said as a gesture, for phones. */
+  touchControls: string;
   /** The win condition, in four or five words, shown before you start. */
   goal: string;
   theme: ThemeId;
@@ -114,6 +111,5 @@ export interface Era {
   duration: number;
   fact: string;
   deepDive: EraDeepDive;
-  touch: TouchControlSet;
   play: EraPlay;
 }

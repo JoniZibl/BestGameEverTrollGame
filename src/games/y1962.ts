@@ -99,7 +99,6 @@ export function create1962(api: GameApi): MiniGame {
     start() {
       respawn();
       placeRival();
-      api.say('TURN: ← →   THRUST: ↑   FIRE: SPACE');
       api.audio.blip(440, 0.1, 'sine', 0.2);
     },
 
@@ -109,8 +108,18 @@ export function create1962(api: GameApi): MiniGame {
       cool -= dt;
 
       // --- ship ---
-      ship.a += api.input.axisX * 3.2 * dt;
-      if (api.input.up) {
+      // Touch: the nose turns towards the finger and thrusts while it is held.
+      let thrusting = api.input.up;
+      if (api.input.pointerDown) {
+        const want = Math.atan2(api.input.pointerY - ship.y, api.input.pointerX - ship.x);
+        let diff = want - ship.a;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        ship.a += Math.max(-1, Math.min(1, diff * 3)) * 3.4 * dt;
+        thrusting = Math.hypot(api.input.pointerX - ship.x, api.input.pointerY - ship.y) > 40;
+      } else {
+        ship.a += api.input.axisX * 3.2 * dt;
+      }
+      if (thrusting) {
         ship.vx += Math.cos(ship.a) * 180 * dt;
         ship.vy += Math.sin(ship.a) * 180 * dt;
         if (Math.random() < 0.3) api.audio.blip(rand(80, 110), 0.04, 'sine', 0.08);
@@ -154,7 +163,8 @@ export function create1962(api: GameApi): MiniGame {
       wrap(rival);
 
       // --- shots ---
-      if (api.input.actionPressed && cool <= 0) {
+      const wantsShot = api.input.actionKeyPressed || api.input.tapped || api.input.pointerDown;
+      if (wantsShot && cool <= 0) {
         cool = 0.28;
         shots.push({
           x: ship.x,
@@ -240,7 +250,7 @@ export function create1962(api: GameApi): MiniGame {
       ctx.lineTo(-9, -8);
       ctx.closePath();
       ctx.stroke();
-      if (api.input.up) {
+      if (api.input.up || api.input.pointerDown) {
         ctx.beginPath();
         ctx.moveTo(-6, 0);
         ctx.lineTo(-14 - Math.random() * 7, 0);

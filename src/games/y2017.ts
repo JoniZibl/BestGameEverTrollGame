@@ -68,7 +68,6 @@ export function create2017(api: GameApi): MiniGame {
         const r = rand(0, arena());
         crowd.push({ x: cx() + Math.cos(a) * r, y: cy() + Math.sin(a) * r, vx: rand(-40, 40), vy: rand(-40, 40), alive: true });
       }
-      api.say('MOVE: ARROW KEYS    STAY IN THE CIRCLE');
     },
 
     update(dt) {
@@ -78,8 +77,8 @@ export function create2017(api: GameApi): MiniGame {
       zoneR = clamp(1 - t * 0.024, 0.28, 1);
 
       const sp = 270;
-      player.x += api.input.axisX * sp * dt;
-      player.y += api.input.axisY * sp * dt;
+      player.x += api.input.moveX * sp * dt;
+      player.y += api.input.moveY * sp * dt;
       player.x = clamp(player.x, 10, api.w - 10);
       player.y = clamp(player.y, 10, api.h - 10);
 

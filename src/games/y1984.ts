@@ -45,9 +45,11 @@ export function create1984(api: GameApi): MiniGame {
   const grid: number[][] = Array.from({ length: H }, () => Array(W).fill(0));
   let piece = { m: SHAPES[0], x: 3, y: 0 };
 
-  const cell = () => Math.min((api.h - 30) / H, api.w / (W + 10));
+  // Leave the top of the stage free: that is where the control caption sits.
+  const top = () => api.h * 0.15;
+  const cell = () => Math.min((api.h - top() - 26) / H, api.w / (W + 2.2));
   const ox = () => (api.w - cell() * W) / 2;
-  const oy = () => (api.h - cell() * H) / 2;
+  const oy = () => top();
 
   const collides = (m: number[][], px: number, py: number) => {
     for (let y = 0; y < m.length; y++) {
@@ -116,7 +118,6 @@ export function create1984(api: GameApi): MiniGame {
   return {
     start() {
       newPiece();
-      api.say('MOVE: ← →   ROTATE: ↑   DROP: SPACE');
     },
 
     update(dt) {
@@ -130,11 +131,17 @@ export function create1984(api: GameApi): MiniGame {
       }
 
       moveTimer -= dt;
+      const swipe = api.input.swipe;
+      const sideways = swipe === 'left' ? -1 : swipe === 'right' ? 1 : 0;
+      if (sideways && !collides(piece.m, piece.x + sideways, piece.y)) {
+        piece.x += sideways;
+        api.audio.blip(300, 0.03, 'square', 0.1);
+      }
       if (moveTimer <= 0 && api.input.axisX) {
         if (!collides(piece.m, piece.x + api.input.axisX, piece.y)) piece.x += api.input.axisX;
         moveTimer = 0.11;
       }
-      if (api.input.justPressed('ArrowUp', 'KeyW')) {
+      if (api.input.justPressed('ArrowUp', 'KeyW') || api.input.tapped) {
         const r = rotate(piece.m);
         if (!collides(r, piece.x, piece.y)) piece.m = r;
         else if (!collides(r, piece.x - 1, piece.y)) {
@@ -143,7 +150,7 @@ export function create1984(api: GameApi): MiniGame {
         }
         api.audio.blip(500, 0.04, 'square', 0.12);
       }
-      if (api.input.justPressed('Space') || api.input.actionPressed) {
+      if (api.input.justPressed('Space') || api.input.swipe === 'down' || api.input.secondTap) {
         while (!collides(piece.m, piece.x, piece.y + 1)) piece.y++;
         lockPiece();
         return;

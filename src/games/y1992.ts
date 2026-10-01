@@ -51,7 +51,6 @@ export function create1992(api: GameApi): MiniGame {
   return {
     start() {
       startRound(1);
-      api.say('MOVE: ← →   PUNCH: SPACE');
     },
 
     update(dt) {
@@ -82,8 +81,8 @@ export function create1992(api: GameApi): MiniGame {
       you.recover = Math.max(0, you.recover - dt);
       you.hurt = Math.max(0, you.hurt - dt);
       if (!you.recover) {
-        you.x = clamp(you.x + api.input.axisX * 0.34 * dt, 0.08, 0.92);
-        if (api.input.actionPressed) {
+        you.x = clamp(you.x + api.input.moveX * 0.34 * dt, 0.08, 0.92);
+        if (api.input.firePressed) {
           you.attack = 0.18;
           you.recover = 0.3;
           api.audio.blip(300, 0.05, 'square', 0.14, 500);

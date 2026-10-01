@@ -85,7 +85,6 @@ export function create1978(api: GameApi): MiniGame {
     start() {
       px = api.w / 2;
       spawnWave();
-      api.say('MOVE: ← →   FIRE: SPACE');
     },
 
     update(dt) {
@@ -94,7 +93,7 @@ export function create1978(api: GameApi): MiniGame {
       const scale = u() * 1.4;
 
       px = clamp(px + api.input.axisX * 430 * scale * dt, playerW() / 2, api.w - playerW() / 2);
-      if (api.input.pointerDown && api.input.pointerX > 0) {
+      if (api.input.pointerDown) {
         px = clamp(api.input.pointerX, playerW() / 2, api.w - playerW() / 2);
       }
 
