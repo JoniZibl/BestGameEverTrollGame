@@ -16,6 +16,7 @@ export function create1994(api: GameApi): MiniGame {
   let atb = 0;
   let cursor = 0;
   let hp = 120;
+  let maxHp = 120;
   let mp = 18;
   let foeHp = 90;
   let foeMax = 90;
@@ -44,13 +45,13 @@ export function create1994(api: GameApi): MiniGame {
 
   const nextBattle = () => {
     battle++;
-    if (battle > 3) {
+    if (battle > api.diff.goal(3)) {
       over = true;
       api.shout('NO MORE ENCOUNTERS');
       window.setTimeout(() => api.win({ stat: `3 RANDOM ENCOUNTERS SURVIVED` }), 1600);
       return;
     }
-    foeMax = 90 + battle * 45;
+    foeMax = api.diff.goal(90 + battle * 45);
     foeHp = foeMax;
     foeTimer = 3.2;
     atb = 0;
@@ -79,7 +80,7 @@ export function create1994(api: GameApi): MiniGame {
       float(`${dmg}`, true);
       say('SOMETHING EXPENSIVE HAPPENS.');
     } else if (i === 2) {
-      hp = Math.min(120, hp + 40);
+      hp = Math.min(maxHp, hp + 40);
       float('+40', false);
       say('YOU DRINK THE GREEN ONE.');
     } else {
@@ -101,6 +102,8 @@ export function create1994(api: GameApi): MiniGame {
 
   return {
     start() {
+      hp = maxHp = api.diff.lives(120);
+      foeMax = foeHp = api.diff.goal(90);
       api.hud('BATTLE 1');
     },
 
@@ -115,8 +118,8 @@ export function create1994(api: GameApi): MiniGame {
         atb = clamp(atb + dt / 2.6, 0, 1);
         foeTimer -= dt;
         if (foeTimer <= 0) {
-          foeTimer = rand(2.8, 4.2) - battle * 0.3;
-          const dmg = Math.round(rand(8, 14) + battle * 5);
+          foeTimer = (rand(2.8, 4.2) - battle * 0.3) / api.diff.pace(1);
+          const dmg = Math.round(api.diff.pace(rand(8, 14) + battle * 5));
           hp -= dmg;
           float(`${dmg}`, false);
           say('THE SHAPE RETALIATES.');

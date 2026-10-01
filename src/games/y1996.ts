@@ -64,7 +64,8 @@ export function create1996(api: GameApi): MiniGame {
   let taken = 0;
   let quantize = 4;
   let far = 20;
-  const NEEDED = 5;
+  let NEEDED = 5;
+  let limit = 75;
   let polyLabel = 412;
   let remastered = false;
   const cam = { x: 0, y: 1.6, z: -6, yaw: 0, bob: 0 };
@@ -111,12 +112,15 @@ export function create1996(api: GameApi): MiniGame {
         Math.abs(z - s.pos.z) < s.scale + 1.6,
     );
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 2, run: () => api.say('LOOK AT THESE GRAPHICS.') },
     { at: 9, run: () => api.say('That fog is not atmosphere. It is hiding the parts we did not draw.') },
     { at: 30, run: () => api.say('Still looking? The draw distance is not helping, is it.') },
     {
       at: 17,
+      when: () => taken >= 2,
+      warn: 'Two found. Hold on.',
       run: () => {
         remastered = true;
         quantize = 1;
@@ -127,10 +131,14 @@ export function create1996(api: GameApi): MiniGame {
         api.audio.jingle([60, 67, 72, 76], 0.08, 'sawtooth');
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      NEEDED = api.diff.goal(5);
+      limit = api.diff.time(75);
       build();
     },
 
@@ -164,12 +172,12 @@ export function create1996(api: GameApi): MiniGame {
         }
       }
 
-      if (t > 75) {
+      if (t > limit) {
         api.lose('Lost in the fog. It was doing its job.');
         return;
       }
       api.hud(
-        `POLYGONS ${polyLabel.toLocaleString()}    CRYSTALS ${taken}/${NEEDED}    ${Math.max(0, 75 - t).toFixed(0)}s`,
+        `POLYGONS ${polyLabel.toLocaleString()}    CRYSTALS ${taken}/${NEEDED}    ${Math.max(0, limit - t).toFixed(0)}s`,
       );
     },
 

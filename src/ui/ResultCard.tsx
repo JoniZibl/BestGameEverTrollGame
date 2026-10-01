@@ -13,7 +13,7 @@ const sentences = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: string }) {
+export function ResultCard({ era, stat }: { era: Era; stat?: string }) {
   const { go, openEra, markDeepDive, allErasDone } = useGame();
   const [step, setStep] = useState<Step>('head');
   const [page, setPage] = useState(0);
@@ -62,15 +62,10 @@ export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: 
     <div className="screen result-screen">
       {step === 'head' && (
         <div className="card-step" key="head">
-          <span className="result-kicker">{won ? 'YEAR COMPLETE' : 'YEAR SURVIVED'}</span>
+          <span className="result-kicker">YEAR COMPLETE</span>
           <h1 className="giant">{era.label}</h1>
           <h2 className="result-title">{era.title}</h2>
           {stat ? <p className="result-stat">{stat}</p> : null}
-          {!won ? (
-            <p className="result-missed">
-              No fragment for this one. The machine still needs {era.label} done properly.
-            </p>
-          ) : null}
           <button className="btn huge step-btn" onClick={advance}>
             CONTINUE
           </button>
@@ -138,7 +133,7 @@ export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: 
 
       {step === 'actions' && (
         <div className="card-step" key="actions">
-          <span className="result-kicker">{won ? 'FRAGMENT SECURED' : 'FRAGMENT STILL MISSING'}</span>
+          <span className="result-kicker">FRAGMENT SECURED · NEXT YEAR OPEN</span>
           <h1 className="giant small-giant">{era.label}</h1>
           <div className="result-actions">
             {next ? (
@@ -159,17 +154,6 @@ export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: 
                 BACK TO THE MACHINE
               </button>
             )}
-            {!won ? (
-              <button
-                className="btn"
-                onClick={() => {
-                  audio.blip(560, 0.1, 'square', 0.2, 900);
-                  openEra(era.id);
-                }}
-              >
-                TRY {era.label} AGAIN
-              </button>
-            ) : null}
             <button className="btn ghost" onClick={() => go('machine')}>
               TIMELINE
             </button>

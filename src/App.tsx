@@ -3,6 +3,7 @@ import { useGame } from './core/state';
 import { TitleScreen } from './ui/TitleScreen';
 import { ConfirmScreen } from './ui/ConfirmScreen';
 import { IntroScreen } from './ui/IntroScreen';
+import { DifficultyScreen } from './ui/DifficultyScreen';
 import { TimeMachine } from './ui/TimeMachine';
 import { BriefScreen } from './ui/BriefScreen';
 import { PlayScreen } from './ui/PlayScreen';
@@ -45,6 +46,7 @@ export default function App() {
         {screen === 'title' && <TitleScreen />}
         {screen === 'confirm' && <ConfirmScreen />}
         {screen === 'intro' && <IntroScreen />}
+        {screen === 'difficulty' && <DifficultyScreen />}
         {screen === 'machine' && <TimeMachine />}
         {screen === 'brief' && <BriefScreen />}
         {(screen === 'play' || screen === 'result') && <PlayScreen />}

@@ -42,8 +42,8 @@ export function create1992(api: GameApi): MiniGame {
     banner = `ROUND ${n}`;
     you.x = 0.3;
     foe.x = 0.7;
-    you.hp = you.maxHp = n === 1 ? 100 : n === 2 ? 130 : 150;
-    foe.hp = foe.maxHp = n === 1 ? 1 : n === 2 ? 100 : 190;
+    you.hp = you.maxHp = api.diff.lives(n === 1 ? 100 : n === 2 ? 130 : 150);
+    foe.hp = foe.maxHp = n === 1 ? 1 : api.diff.goal(n === 2 ? 100 : 190);
     foe.down = 0;
     you.down = 0;
     api.audio.jingle(n === 1 ? [60, 64, 67] : [48, 50, 51, 52], 0.1, 'sawtooth');
@@ -125,7 +125,7 @@ export function create1992(api: GameApi): MiniGame {
       } else if (round >= 2) {
         const gap = you.x - foe.x;
         const dir = Math.sign(gap) || 1;
-        const speed = round === 2 ? 0.42 : 0.3;
+        const speed = api.diff.pace(round === 2 ? 0.42 : 0.3);
         if (Math.abs(gap) > 0.14) {
           foe.x = clamp(foe.x + dir * speed * dt, 0.08, 0.92);
         } else if (!foe.recover && !foe.windup && foe.attack <= 0) {
@@ -135,7 +135,7 @@ export function create1992(api: GameApi): MiniGame {
           foe.attack = 0.16;
           foe.recover = 0.5;
           if (Math.abs(you.x - foe.x) < (round === 3 ? 0.26 : 0.19)) {
-            hit(you, round === 3 ? 17 : 9, -1);
+            hit(you, api.diff.pace(round === 3 ? 17 : 9), -1);
             if (you.hp <= 0) {
               phase = 'done';
               banner = 'K.O.';

@@ -24,7 +24,7 @@ const PRESSES = [
 ];
 
 /** 2026 — twelve thousand people worked on this. You press one button. */
-export function Game2026({ onWin, say, shout, audio }: ReactGameProps) {
+export function Game2026({ onWin, say, shout, audio, diff }: ReactGameProps) {
   const [i, setI] = useState(0);
   const [p, setP] = useState(0);
   const [eula, setEula] = useState(false);
@@ -42,8 +42,9 @@ export function Game2026({ onWin, say, shout, audio }: ReactGameProps) {
       return;
     }
     const started = performance.now();
+    const ms = diff.time(step.ms);
     const tick = (now: number) => {
-      const prog = Math.min(1, (now - started) / step.ms);
+      const prog = Math.min(1, (now - started) / ms);
       setP(prog);
       if (prog < 1) raf.current = requestAnimationFrame(tick);
       else {
@@ -54,7 +55,7 @@ export function Game2026({ onWin, say, shout, audio }: ReactGameProps) {
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
-  }, [i, phase, audio]);
+  }, [i, phase, audio, diff]);
 
   useEffect(() => {
     if (phase !== 'ready') return;

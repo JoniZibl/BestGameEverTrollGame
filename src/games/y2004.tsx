@@ -12,7 +12,7 @@ const CHAT = [
 ];
 
 /** 2004 — the world is enormous. The quest is not. */
-export function Game2004({ onWin, say, shout, audio, grant }: ReactGameProps) {
+export function Game2004({ onWin, say, shout, audio, grant, diff }: ReactGameProps) {
   const [collected, setCollected] = useState(0);
   const [goal, setGoal] = useState(3);
   const [casting, setCasting] = useState(0);
@@ -55,7 +55,7 @@ export function Game2004({ onWin, say, shout, audio, grant }: ReactGameProps) {
           if (n === 6) say('Only 44 to go.');
           if (n === 9) say('You are allowed to leave, you know.');
           if (n === 12) say('Your guild has logged off. They said to say hello.');
-          if (n >= 16) {
+          if (n >= diff.goal(16)) {
             setStage('over');
             window.setTimeout(() => {
               shout('QUEST COMPLETE?');

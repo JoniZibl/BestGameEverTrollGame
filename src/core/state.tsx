@@ -11,12 +11,14 @@ import {
 import { loadProgress, saveProgress, wipeProgress, type Progress } from './storage';
 import { ACHIEVEMENTS, totalFragments } from './achievements';
 import { audio } from './audio';
+import { tuning, type DifficultyId } from './difficulty';
 import { ERAS } from '../games/registry';
 
 export type Screen =
   | 'title'
   | 'confirm'
   | 'intro'
+  | 'difficulty'
   | 'machine'
   | 'brief'
   | 'play'
@@ -44,6 +46,9 @@ interface Ctx {
   bump(key: 'presses' | 'noCount' | 'yearClicks', by?: number): number;
   toggleMute(): void;
   markIntroSeen(): void;
+  setDifficulty(id: DifficultyId): void;
+  difficulty: DifficultyId;
+  tuning: ReturnType<typeof tuning>;
   markDeepDive(id: string): void;
   note(text: string, sub?: string): void;
   reset(): void;
@@ -152,6 +157,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return next;
   }, []);
 
+  const setDifficulty = useCallback((id: DifficultyId) => {
+    progressRef.current = { ...progressRef.current, difficulty: id };
+    setProgress(progressRef.current);
+  }, []);
+
   const markIntroSeen = useCallback(() => {
     if (progressRef.current.seenIntro) return;
     progressRef.current = { ...progressRef.current, seenIntro: true };
@@ -235,6 +245,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     bump,
     toggleMute,
     markIntroSeen,
+    setDifficulty,
+    difficulty: progress.difficulty ?? 'player',
+    tuning: tuning(progress.difficulty ?? 'player'),
     markDeepDive,
     note,
     reset,

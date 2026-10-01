@@ -14,6 +14,7 @@ export function create1997(api: GameApi): MiniGame {
   let t = 0;
   let step = 0;
   let rate = 6.5;
+  let target = 12;
   let grow = 3;
   let eaten = 0;
   let pending = 0;
@@ -42,22 +43,28 @@ export function create1997(api: GameApi): MiniGame {
     }
   };
 
-  const script = new Script([
-    { at: 10, run: () => { rate = 9; api.say('It speeds up. That is the entire design document.'); } },
-    { at: 20, run: () => { rate = 13; api.shout('FASTER'); } },
-    { at: 30, run: () => { grow = 6; api.say('Each pellet is worth more now. Sorry.'); } },
+  const script = new Script(
+    [
+    { at: 12, when: () => eaten >= 3, run: () => { rate = api.diff.pace(9); api.say('It speeds up. That is the entire design document.'); } },
+    { at: 22, when: () => eaten >= 6, warn: 'Six. Of course.', run: () => { rate = api.diff.pace(13); api.shout('FASTER'); } },
+    { at: 32, when: () => eaten >= 9, run: () => { grow = 6; api.say('Each pellet is worth more now. Sorry.'); } },
     {
-      at: 40,
+      at: 42,
+      warn: 'One more thing.',
       run: () => {
         walls = false;
         api.shout('WALLS OFF');
         api.say('Edges wrap. This is widely considered the easy mode.');
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      rate = api.diff.pace(6.5);
+      target = api.diff.goal(12);
       placeFood();
     },
 
@@ -110,7 +117,7 @@ export function create1997(api: GameApi): MiniGame {
         api.audio.blip(600 + eaten * 30, 0.06, 'square', 0.2);
         placeFood();
         pending += grow;
-        if (eaten >= 12) {
+        if (eaten >= target) {
           api.win({ stat: `${eaten} PELLETS, LENGTH ${snake.length}`, score: eaten });
           return;
         }
@@ -118,7 +125,7 @@ export function create1997(api: GameApi): MiniGame {
       if (pending > 0) pending--;
       else snake.pop();
 
-      api.hud(`PELLETS ${eaten}/12    LENGTH ${snake.length}`);
+      api.hud(`PELLETS ${eaten}/${target}    LENGTH ${snake.length}`);
     },
 
     draw() {

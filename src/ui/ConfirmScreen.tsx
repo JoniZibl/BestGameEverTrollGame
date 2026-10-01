@@ -11,14 +11,14 @@ const NO_LINES = [
 ];
 
 export function ConfirmScreen() {
-  const { go, bump, grant, addFragment, progress } = useGame();
+  const { go, bump, grant, addFragment } = useGame();
   const [noCount, setNoCount] = useState(0);
   const [nudge, setNudge] = useState({ x: 0, y: 0 });
   const [line, setLine] = useState('');
 
   const yes = () => {
     audio.blip(660, 0.12, 'square', 0.25, 1200);
-    go(progress.seenIntro ? 'machine' : 'intro');
+    go('difficulty');
   };
 
   const no = () => {

@@ -20,7 +20,9 @@ interface Props {
 }
 
 export function GameHost({ era, onWin, onLose, onPress }: Props) {
-  const { grant } = useGame();
+  const { grant, tuning } = useGame();
+  const tuningRef = useRef(tuning);
+  tuningRef.current = tuning;
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<Input>(new Input());
@@ -105,6 +107,7 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
       get isTouch() {
         return input.coarse;
       },
+      diff: tuningRef.current,
       say: (text, ms = 2600) => {
         setCaption(text);
         captionTimer = ms / 1000;
@@ -181,6 +184,7 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
               }}
               audio={audio}
               grant={grant}
+              diff={tuning}
             />
           )
         )}

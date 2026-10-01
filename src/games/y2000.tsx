@@ -12,12 +12,13 @@ interface Target {
 }
 
 /** 2000 — the game is fine. The connection is the content. */
-export function Game2000({ onWin, onLose, say, shout, audio, grant }: ReactGameProps) {
+export function Game2000({ onWin, onLose, say, shout, audio, grant, diff }: ReactGameProps) {
   const [phase, setPhase] = useState<'dial' | 'play'>('dial');
   const [pct, setPct] = useState(0);
   const [step, setStep] = useState(0);
   const [hits, setHits] = useState(0);
-  const [left, setLeft] = useState(26);
+  const need = diff.goal(8);
+  const [left, setLeft] = useState(() => Math.round(diff.time(26)));
   const [targets, setTargets] = useState<Target[]>([]);
   const [shots, setShots] = useState<{ id: number; x: number; y: number }[]>([]);
   const areaRef = useRef<HTMLDivElement>(null);
@@ -98,7 +99,7 @@ export function Game2000({ onWin, onLose, say, shout, audio, grant }: ReactGameP
 
   useEffect(() => {
     if (phase !== 'play' || left > 0) return;
-    if (hits >= 5) onWin({ stat: `${hits} HITS THROUGH 420ms OF LAG`, score: hits });
+    if (hits >= Math.ceil(need * 0.6)) onWin({ stat: `${hits} HITS THROUGH 420ms OF LAG`, score: hits });
     else onLose('The lag won. It usually did.');
   }, [left, phase, hits, onWin, onLose]);
 
@@ -125,7 +126,7 @@ export function Game2000({ onWin, onLose, say, shout, audio, grant }: ReactGameP
           const n = h + 1;
           if (n === 2) say('Aim where it is going to be. Welcome to 2000.');
           if (n === 4) say('Four. The server is still thinking about the first one.');
-          if (n >= 8) onWin({ stat: `${n} HITS THROUGH 420ms OF LAG`, score: n });
+          if (n >= need) onWin({ stat: `${n} HITS THROUGH 420ms OF LAG`, score: n });
           return n;
         });
         return ts.map((t) =>
@@ -167,7 +168,7 @@ export function Game2000({ onWin, onLose, say, shout, audio, grant }: ReactGameP
     <div className="era2000 arena" ref={areaRef} onMouseDown={shoot}>
       <div className="net-hud">
         <span>PING 420ms</span>
-        <span>HITS {hits}/8</span>
+        <span>HITS {hits}/{need}</span>
         <span>{Math.max(0, left)}s</span>
       </div>
       {targets.map((t) => (

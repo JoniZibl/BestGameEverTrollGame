@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import type { Input } from './input';
 import type { AudioEngine } from './audio';
+import type { Tuning } from './difficulty';
 
 /** Visual eras the whole website steps through, not just the games. */
 export type ThemeId =
@@ -57,6 +58,8 @@ export interface GameApi {
   font(px: number, kind?: FontKind): string;
   /** True when the player is using a finger, not a mouse. */
   readonly isTouch: boolean;
+  /** The chosen difficulty, as numbers a game can apply directly. */
+  diff: Tuning;
 }
 
 export type FontKind = 'display' | 'pixel' | 'mono' | 'ui';
@@ -79,6 +82,8 @@ export interface ReactGameProps {
   audio: AudioEngine;
   /** Unlocks an achievement by id. */
   grant?: (id: string) => void;
+  /** The chosen difficulty, as numbers. */
+  diff: Tuning;
 }
 
 export type EraPlay =

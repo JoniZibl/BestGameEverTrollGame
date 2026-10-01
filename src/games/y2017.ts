@@ -14,6 +14,7 @@ export function create2017(api: GameApi): MiniGame {
   let t = 0;
   let alive = 100;
   let hp = 100;
+  let drain = 26;
   let looted = false;
   let finalPhase = false;
   let rivalWalking = false;
@@ -35,7 +36,8 @@ export function create2017(api: GameApi): MiniGame {
     if (line) api.say(line);
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 0.6, run: () => api.shout('100 PLAYERS') },
     { at: 4, run: () => drop(50, '50 remaining. You did nothing.') },
     { at: 8, run: () => drop(20, '20 remaining. Still nothing.') },
@@ -53,12 +55,16 @@ export function create2017(api: GameApi): MiniGame {
         api.audio.jingle([36, 43, 48, 55], 0.22, 'sawtooth');
       },
     },
-    { at: 24, run: () => { rivalHunting = true; api.say('Your opponent has spotted you.'); } },
-    { at: 31, run: () => { rivalHunting = false; rivalWalking = true; api.say('Your opponent is doing something.'); } },
-  ]);
+    { at: 24, warn: 'It is looking at you.', run: () => { rivalHunting = true; api.say('Your opponent has spotted you.'); } },
+      { at: 31, run: () => { rivalHunting = false; rivalWalking = true; api.say('Your opponent is doing something.'); } },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      hp = api.diff.lives(100);
+      drain = api.diff.pace(26);
       player.x = cx();
       player.y = cy() + arena() * 0.3;
       loot.x = cx() + rand(-arena() * 0.4, arena() * 0.4);
@@ -74,7 +80,7 @@ export function create2017(api: GameApi): MiniGame {
       if (won) return;
       t += dt;
       script.update(t);
-      zoneR = clamp(1 - t * 0.024, 0.28, 1);
+      zoneR = clamp(1 - t * api.diff.pace(0.024), 0.28, 1);
 
       const sp = 270;
       player.x += api.input.moveX * sp * dt;
@@ -85,7 +91,7 @@ export function create2017(api: GameApi): MiniGame {
       const r = arena() * zoneR;
       const out = dist(player.x, player.y, cx(), cy()) > r;
       if (out) {
-        hp -= 26 * dt;
+        hp -= drain * dt;
         if (Math.random() < 0.08) api.audio.blip(120, 0.1, 'sawtooth', 0.12);
         if (hp <= 0) {
           api.lose('Eliminated by weather.');
@@ -142,7 +148,7 @@ export function create2017(api: GameApi): MiniGame {
           rival.x += ((player.x - rival.x) / d) * 180 * dt;
           rival.y += ((player.y - rival.y) / d) * 180 * dt;
           if (d < 24) {
-            hp -= 42 * dt;
+            hp -= api.diff.pace(42) * dt;
             if (Math.random() < 0.1) api.audio.blip(90, 0.12, 'sawtooth', 0.18);
             if (hp <= 0) {
               api.lose('Second place. Out of two.');

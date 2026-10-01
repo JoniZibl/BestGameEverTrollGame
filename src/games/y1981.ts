@@ -16,7 +16,8 @@ interface Barrel {
 /** 1981 — climb the girders, do not meet the barrels. The ape is not negotiable. */
 export function create1981(api: GameApi): MiniGame {
   let t = 0;
-  let lives = 3;
+  let lives = api.diff.lives(3);
+  let climbed = 0;
   let spawn = 1.2;
   let speed = 1;
   let ladderJoke = false;
@@ -34,19 +35,35 @@ export function create1981(api: GameApi): MiniGame {
     { r: 3, x: 120 },
   ];
 
-  const script = new Script([
-    { at: 8, run: () => { spawn = 0.85; api.say('He has more barrels.'); } },
-    { at: 16, run: () => { speed = 1.4; api.shout('FASTER BARRELS'); } },
-    {
-      at: 24,
-      run: () => {
-        ladderJoke = true;
-        api.say('The ladders are now also moving. Nobody authorised this.');
+  const script = new Script(
+    [
+      {
+        at: 10,
+        when: () => climbed >= 1,
+        warn: 'One girder up. He noticed.',
+        run: () => { spawn = api.diff.pace(0.85); api.say('He has more barrels.'); },
       },
-    },
-  ]);
+      {
+        at: 20,
+        when: () => climbed >= 2,
+        warn: 'Still climbing, then.',
+        run: () => { speed = api.diff.pace(1.4); api.shout('FASTER BARRELS'); },
+      },
+      {
+        at: 30,
+        when: () => climbed >= 3,
+        warn: 'Fine.',
+        run: () => {
+          ladderJoke = true;
+          api.say('The ladders are now also moving. Nobody authorised this.');
+        },
+      },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   const die = (why: string) => {
+    if (script.mercy) return;
     lives--;
     api.audio.blip(260, 0.5, 'square', 0.3, 70);
     if (lives <= 0) {
@@ -75,7 +92,7 @@ export function create1981(api: GameApi): MiniGame {
       // --- barrels ---
       spawn -= dt;
       if (spawn <= 0) {
-        spawn = rand(0.9, 1.6) / speed;
+        spawn = rand(0.9, 1.6) / speed / api.diff.pace(1);
         barrels.push({ x: 60, y: girderY(ROWS - 1, 60) - 12, row: ROWS - 1, vx: 70 * speed, falling: false });
         api.audio.blip(150, 0.12, 'square', 0.18, 90);
       }
@@ -141,6 +158,7 @@ export function create1981(api: GameApi): MiniGame {
         return;
       }
 
+      climbed = Math.max(climbed, Math.floor((WORLD_H - player.y) / 110));
       api.hud(`LIVES ${lives}    HEIGHT ${Math.round(clamp(1 - player.y / WORLD_H, 0, 1) * 100)}%`);
     },
 

@@ -19,6 +19,7 @@ export function create2011(api: GameApi): MiniGame {
   let held = 0;
   let night = false;
   let hp = 3;
+  let nightLength = 22;
   let survived = 0;
   const grid: Block[][] = [];
   const creeps: Creep[] = [];
@@ -37,10 +38,12 @@ export function create2011(api: GameApi): MiniGame {
     }
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 3, run: () => api.say('Tap a block to mine it. Tap the sky to place one.') },
     {
       at: 16,
+      warn: 'The light is going.',
       run: () => {
         api.shout('THE SUN IS\nSETTING');
         api.say('Something comes out at night. Build a wall. Three blocks high.');
@@ -55,10 +58,14 @@ export function create2011(api: GameApi): MiniGame {
       },
     },
     { at: 34, run: () => creeps.push({ x: 2.5, y: GROUND - 1, hiss: 0 }) },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      hp = api.diff.lives(3);
+      nightLength = api.diff.time(22);
       build();
     },
 
@@ -99,7 +106,7 @@ export function create2011(api: GameApi): MiniGame {
           const dir = Math.sign(player.x - cr.x);
           const ahead = Math.floor(cr.x + dir * 0.6);
           const blocked = grid[Math.floor(cr.y)]?.[ahead] || grid[Math.floor(cr.y) - 1]?.[ahead];
-          if (!blocked) cr.x += dir * 1.1 * dt;
+          if (!blocked) cr.x += dir * api.diff.pace(1.1) * dt;
           let land = GROUND;
           for (let y = 0; y < ROWS; y++) if (grid[y][Math.floor(cr.x)]) { land = y; break; }
           cr.y += (land - 1 - cr.y) * Math.min(1, dt * 8);
@@ -107,7 +114,7 @@ export function create2011(api: GameApi): MiniGame {
             cr.hiss += dt;
             if (cr.hiss > 1.2) {
               cr.hiss = -3;
-              hp--;
+              if (!script.mercy) hp--;
               api.audio.noise(0.5, 0.35, 500);
               api.shout('HISS');
               cr.x += dir * -3;
@@ -118,7 +125,7 @@ export function create2011(api: GameApi): MiniGame {
             }
           } else if (cr.hiss > 0) cr.hiss = 0;
         }
-        if (survived > 22) {
+        if (survived > nightLength) {
           api.win({ stat: `SURVIVED THE NIGHT WITH ${hp} HEARTS` });
           return;
         }
@@ -126,7 +133,7 @@ export function create2011(api: GameApi): MiniGame {
 
       api.hud(
         night
-          ? `NIGHT  ${Math.max(0, 22 - survived).toFixed(0)}s    HEARTS ${hp}    BLOCKS ${held}`
+          ? `NIGHT  ${Math.max(0, nightLength - survived).toFixed(0)}s    HEARTS ${hp}    BLOCKS ${held}`
           : `DAY    ${Math.max(0, 24 - t).toFixed(0)}s TO DUSK    BLOCKS ${held}`,
       );
     },

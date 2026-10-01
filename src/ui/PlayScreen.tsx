@@ -9,7 +9,8 @@ import type { WinPayload } from '../core/types';
 type Outcome = { kind: 'won'; stat?: string } | { kind: 'lost'; reason?: string } | null;
 
 export function PlayScreen() {
-  const { era, completeEra, grant, addFragment, bump, progress, go } = useGame();
+  const { era, completeEra, grant, addFragment, bump, progress, go, difficulty, setDifficulty } =
+    useGame();
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [attempt, setAttempt] = useState(0);
   const started = useRef(Date.now());
@@ -28,12 +29,15 @@ export function PlayScreen() {
 
   const onLose = useCallback(
     (reason?: string) => {
+      if (!era) return;
       const elapsed = (Date.now() - started.current) / 1000;
       if (elapsed < 2.2) grant('skill-issue');
       audio.thud();
+      // A loss still counts as an attempt: it is what unlocks the offer of mercy.
+      completeEra(era.id, false);
       setOutcome({ kind: 'lost', reason });
     },
-    [grant],
+    [era, grant, completeEra],
   );
 
   const onPress = useCallback(
@@ -50,7 +54,7 @@ export function PlayScreen() {
   if (!era) return null;
 
   if (outcome?.kind === 'won') {
-    return <ResultCard era={era} won stat={outcome.stat} />;
+    return <ResultCard era={era} stat={outcome.stat} />;
   }
 
   return (
@@ -71,10 +75,15 @@ export function PlayScreen() {
             setOutcome(null);
             setAttempt((a) => a + 1);
           }}
-          onContinue={() => {
-            completeEra(era.id, false, 'SURVIVED, BARELY');
-            setOutcome({ kind: 'won', stat: 'HISTORY CONTINUED WITHOUT YOU' });
+          attempts={progress.eras[era.id]?.attempts ?? 1}
+          difficulty={difficulty}
+          onEasier={(next) => {
+            setDifficulty(next);
+            started.current = Date.now();
+            setOutcome(null);
+            setAttempt((a) => a + 1);
           }}
+          onLeave={() => go('machine')}
         />
       )}
     </div>

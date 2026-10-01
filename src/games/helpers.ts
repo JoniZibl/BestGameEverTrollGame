@@ -77,22 +77,82 @@ export function timerBar(api: GameApi, t: number, total: number) {
 }
 
 export interface Beat {
-  at: number;
+  /** Fire at this many seconds. */
+  at?: number;
+  /** Or fire as soon as this is true — "the game noticed what you did". */
+  when?: () => boolean;
+  /** One line shown a beat early, so a twist is never a trap. */
+  warn?: string;
   run: () => void;
 }
 
-/** Fires scheduled twists once each, in order. Every game is built on one of these. */
+export interface ScriptOpts {
+  /** Used to show the telegraph line. */
+  say?: (text: string, ms?: number) => void;
+  /** Seconds of mercy granted right after each twist. */
+  grace?: number;
+}
+
+const WARN_LEAD = 1.2;
+
+/**
+ * Fires a game's twists, in order, once each.
+ *
+ * Two things make the trolling land instead of just hurting: a beat can wait on
+ * a condition, so the game reacts to the player rather than to the clock; and
+ * every beat telegraphs a moment early and then hands out a few seconds of
+ * mercy, so the surprise costs a laugh and not a life.
+ */
 export class Script {
   private i = 0;
-  constructor(private beats: Beat[]) {
-    this.beats.sort((a, b) => a.at - b.at);
+  private warned = -1;
+  private warnAt = 0;
+  private mercyUntil = -1;
+  private t = 0;
+
+  constructor(
+    private beats: Beat[],
+    private opts: ScriptOpts = {},
+  ) {
+    this.beats.sort((a, b) => (a.at ?? 1e9) - (b.at ?? 1e9));
   }
+
   update(t: number) {
-    while (this.i < this.beats.length && t >= this.beats[this.i].at) {
-      this.beats[this.i].run();
+    this.t = t;
+    while (this.i < this.beats.length) {
+      const b = this.beats[this.i];
+      const timeDue = b.at !== undefined && t >= b.at;
+      const condDue = !!b.when?.();
+
+      if (!timeDue && !condDue) {
+        // Timed beats announce themselves shortly before they land.
+        if (b.warn && this.warned < this.i && b.at !== undefined && t >= b.at - WARN_LEAD) {
+          this.warned = this.i;
+          this.warnAt = t;
+          this.opts.say?.(b.warn, 1400);
+        }
+        break;
+      }
+
+      // A beat triggered by the player announces itself now, then waits a moment.
+      if (b.warn && this.warned < this.i) {
+        this.warned = this.i;
+        this.warnAt = t;
+        this.opts.say?.(b.warn, 1400);
+      }
+      if (b.warn && t < this.warnAt + WARN_LEAD) break;
+
+      b.run();
+      this.mercyUntil = t + (this.opts.grace ?? 0);
       this.i++;
     }
   }
+
+  /** True for a few seconds after a twist: do not take a life during this. */
+  get mercy() {
+    return this.t < this.mercyUntil;
+  }
+
   get finished() {
     return this.i >= this.beats.length;
   }

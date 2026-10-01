@@ -18,12 +18,13 @@ interface Thing {
   gone?: boolean;
 }
 
-const ROUND = 50;
+const BASE_ROUND = 50;
 
 /** 2001 — a simulation of having a life, which turns out to be admin. */
 export function create2001(api: GameApi): MiniGame {
   let t = 0;
   let using = 0;
+  const ROUND = api.diff.time(BASE_ROUND);
   let target: Thing | null = null;
   const needs: Need[] = [
     { key: 'hunger', label: 'HUNGER', value: 0.8, drain: 0.035 },
@@ -44,9 +45,11 @@ export function create2001(api: GameApi): MiniGame {
     h: th.h * api.h,
   });
 
-  const script = new Script([
+  const script = new Script(
+    [
     {
       at: 14,
+      warn: 'You seem to be coping.',
       run: () => {
         needs.push({ key: 'social', label: 'VALIDATION', value: 0.9, drain: 0.05 });
         things.push({ key: 'social', label: 'PHONE', x: 0.66, y: 0.6, w: 0.22, h: 0.2 });
@@ -64,7 +67,7 @@ export function create2001(api: GameApi): MiniGame {
     {
       at: 34,
       run: () => {
-        needs.forEach((n) => (n.drain *= 1.9));
+        needs.forEach((n) => (n.drain *= 1.7));
         api.shout('EVERYTHING AT ONCE');
       },
     },
@@ -76,7 +79,9 @@ export function create2001(api: GameApi): MiniGame {
         api.say('The fridge is back. We are not going to explain.');
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
@@ -126,7 +131,7 @@ export function create2001(api: GameApi): MiniGame {
       using = Math.max(0, using - dt);
 
       for (const n of needs) {
-        n.value -= n.drain * dt;
+        n.value -= api.diff.pace(n.drain) * dt;
         if (n.value <= 0) {
           api.lose(`${n.label} reached zero. The neighbours are talking.`);
           return;

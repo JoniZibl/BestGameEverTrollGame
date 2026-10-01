@@ -25,6 +25,7 @@ export function create2009(api: GameApi): MiniGame {
   let shots = 0;
   let hit = 0;
   let paused = false;
+  const SHOT_LIMIT = api.diff.lives(12);
   let energyGag = false;
   let adGag = false;
   const blocks: Block[] = [];
@@ -49,9 +50,11 @@ export function create2009(api: GameApi): MiniGame {
     add(baseX + 96, GROUND - 276, 32, 32, true);
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     {
       at: 18,
+      when: () => hit >= 1,
       run: () => {
         if (energyGag) return;
         energyGag = true;
@@ -74,6 +77,7 @@ export function create2009(api: GameApi): MiniGame {
     },
     {
       at: 34,
+      when: () => hit >= 2,
       run: () => {
         if (adGag) return;
         adGag = true;
@@ -92,7 +96,9 @@ export function create2009(api: GameApi): MiniGame {
         });
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   const scale = () => Math.min(api.w / W, api.h / H, 1.4);
   const toWorld = (sx: number, sy: number) => {
@@ -197,12 +203,12 @@ export function create2009(api: GameApi): MiniGame {
         return;
       }
 
-      if (shots >= 12 && !ball.flying) {
-        api.lose('Twelve shots. The tower is fine. Smug, even.');
+      if (shots >= SHOT_LIMIT && !ball.flying) {
+        api.lose(`${SHOT_LIMIT} shots. The tower is fine. Smug, even.`);
         return;
       }
 
-      api.hud(`TARGETS ${3 - hit}    SHOTS ${shots}/12`);
+      api.hud(`TARGETS ${3 - hit}    SHOTS ${shots}/${SHOT_LIMIT}`);
     },
 
     draw() {

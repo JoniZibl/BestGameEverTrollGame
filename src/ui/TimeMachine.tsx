@@ -5,16 +5,17 @@ import { audio } from '../core/audio';
 
 /** The hub: a timeline of years, and a machine that is missing most of its parts. */
 export function TimeMachine() {
-  const { progress, openEra, bump, addFragment, note, allErasDone, go } = useGame();
+  const { progress, openEra, bump, addFragment, note, allErasDone, go, tuning } = useGame();
   const [clickedYear, setClickedYear] = useState<string | null>(null);
 
-  const unlockedIndex = ERAS.reduce((acc, e, i) => (progress.eras[e.id] ? i + 1 : acc), 0);
+  // A year opens only once the one before it has actually been won.
+  const unlockedIndex = ERAS.reduce((acc, e, i) => (progress.eras[e.id]?.won ? i + 1 : acc), 0);
 
   const onYearClick = (id: string, locked: boolean) => {
     if (locked) {
       const n = bump('yearClicks');
       audio.blip(160, 0.08, 'square', 0.16);
-      if (n === 8) note('That year is not ready for you.', 'Finish the one before it.');
+      if (n === 8) note('That year is not ready for you.', 'Win the one before it.');
       if (n === 20) {
         note("Yes. That's still the year.", 'Nothing you do to it will change that.');
         addFragment('secret:year-clicks');
@@ -31,7 +32,10 @@ export function TimeMachine() {
     <div className="screen machine-screen">
       <header className="machine-head">
         <h2>TIME MACHINE</h2>
-        <p>Pick a year. Survive it. Collect the pieces.</p>
+        <p>Win a year to open the next one.</p>
+        <button className="btn ghost small" onClick={() => go('difficulty')}>
+          DIFFICULTY: {tuning.label}
+        </button>
       </header>
 
       <ol className="timeline">
@@ -54,7 +58,11 @@ export function TimeMachine() {
                 <span className="tl-year">{e.label}</span>
                 <span className="tl-title">{locked ? 'LOCKED' : e.title}</span>
                 <span className={`tl-stat${done && !won ? ' missing' : ''}`}>
-                  {done ? (won ? (progress.eras[e.id]?.stat ?? 'COMPLETE') : 'NO FRAGMENT \u00b7 RETRY') : ''}
+                  {won
+                    ? (progress.eras[e.id]?.stat ?? 'COMPLETE')
+                    : done
+                      ? `${progress.eras[e.id]?.attempts ?? 0} TRIED`
+                      : ''}
                 </span>
               </button>
             </li>

@@ -118,18 +118,42 @@ const script = new Script([
 ]);
 ```
 
-## Failing is fine. It is just not free.
+## Difficulty, and what winning is for
 
-Losing never blocks the timeline: the game over screen offers TRY AGAIN and CONTINUE
-ANYWAY, and the next year unlocks either way. But a **time fragment is only awarded
-for an actual win**, so a year you merely survived shows up on the timeline as
-`NO FRAGMENT · RETRY` and the machine stays broken until you go back and do it
-properly. All twenty-seven fragments means winning all twenty-two years and finding the
-five that are hidden somewhere else.
+Pick one of three settings before you start, and change it from the timeline whenever
+you like. It is not a label on a menu: every year reads the same numbers and applies
+them to its own rules.
 
-Each year states its win condition before it starts — survive 46 seconds, clear four
-lines, catch all three ghosts, find five crystals in the fog — and most of them get
-genuinely difficult before the end.
+| | Lives | Enemy pace | How much is asked | Time |
+| --- | --- | --- | --- | --- |
+| **VISITOR** | ×1.7 | ×0.78 | ×0.65 | ×1.35 |
+| **PLAYER** | ×1 | ×1 | ×1 | ×1 |
+| **ARCADE** | ×0.6 | ×1.28 | ×1.35 | ×0.85 |
+
+So 1962 asks for three hits with five ships and 79 seconds on VISITOR, and five hits
+with two ships and 50 seconds on ARCADE. Same game, three different decades of
+patience.
+
+**A year opens only when the one before it has been won.** Losing costs nothing but
+the attempt: TRY AGAIN, or go back to the timeline. After three honest attempts the
+game stops pretending it cannot hear you and offers to drop a difficulty step for you.
+Winning earns the time fragment and opens the next year; all twenty-seven fragments
+means winning all twenty-two years and finding the five hidden elsewhere.
+
+## How the trolling works
+
+Each year escalates, but two rules keep it a joke rather than a mugging.
+
+**The twists watch the player, not the clock.** A beat can wait on a condition, so the
+second ball in 1972 arrives after a nine-rally defence, Tetris speeds up on the line
+you just cleared, the ghosts start walking through walls once you are twelve dots
+ahead, and 1981's ladders only start moving once you have climbed three girders. The
+timer is just the fallback for anyone having a quiet one.
+
+**Every twist announces itself and then forgives you.** A beat telegraphs a moment
+early ("Hm. You can aim.", "Last warning.", "It is looking at you.") and the seconds
+right after it are mercy: no life is lost to the surprise itself. How long that mercy
+lasts is one of the difficulty numbers, from 1.8 seconds down to 0.35.
 
 ## Originality and copyright
 

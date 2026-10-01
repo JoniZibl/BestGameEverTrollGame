@@ -23,7 +23,7 @@ const MAZE = [
 ];
 const COLS = MAZE[0].length;
 const ROWS = MAZE.length;
-const DOT_TARGET = 30;
+let DOT_TARGET = 30;
 
 interface Mover {
   cx: number;
@@ -39,6 +39,7 @@ interface Mover {
 export function create1980(api: GameApi): MiniGame {
   let t = 0;
   let lives = 3;
+  let dotsSinceStart = 0;
   let eaten = 0;
   let phasing = false;
   let reversed = false;
@@ -103,9 +104,12 @@ export function create1980(api: GameApi): MiniGame {
     api.audio.jingle([76, 72, 69, 64], 0.08, 'square');
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     {
-      at: 12,
+      at: 14,
+      when: () => dotsSinceStart >= 12,
+      warn: 'They have noticed you are winning.',
       run: () => {
         phasing = true;
         api.shout('THE GHOSTS ARE\nTIRED OF LOSING');
@@ -113,8 +117,10 @@ export function create1980(api: GameApi): MiniGame {
         api.audio.blip(180, 0.5, 'square', 0.3, 90);
       },
     },
-    { at: 26, run: () => api.say('They are getting quicker about it.') },
-  ]);
+      { at: 28, run: () => api.say('They are getting quicker about it.') },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   const stepTowards = (m: Mover, tx: number, ty: number, flee: boolean) => {
     const opts: [number, number][] = [
@@ -143,6 +149,8 @@ export function create1980(api: GameApi): MiniGame {
 
   return {
     start() {
+      DOT_TARGET = api.diff.goal(30);
+      lives = api.diff.lives(3);
       build();
       spawnGhosts();
     },
@@ -186,6 +194,7 @@ export function create1980(api: GameApi): MiniGame {
           if (d) {
             dots[player.cy][player.cx] = 0;
             eaten++;
+            dotsSinceStart++;
             if (d === 2) {
               frightened = 6;
               ghosts.forEach((g) => !g.caught && (g.scared = true));
@@ -206,7 +215,9 @@ export function create1980(api: GameApi): MiniGame {
         }
       }
 
-      const gSpeed = t < 2.5 ? 0 : reversed || frightened > 0 ? 3.1 : t > 26 ? 5 : phasing ? 4.5 : 3.5;
+      const gSpeed = api.diff.pace(
+        t < 2.5 ? 0 : reversed || frightened > 0 ? 3.1 : t > 28 ? 5 : phasing ? 4.5 : 3.5,
+      );
       for (const g of ghosts) {
         if (g.caught) continue;
         const flee = !!g.scared;
@@ -238,7 +249,7 @@ export function create1980(api: GameApi): MiniGame {
               g.scared = false;
               api.audio.jingle([84, 79, 72], 0.05, 'square');
             }
-          } else {
+          } else if (!script.mercy) {
             lives--;
             api.audio.blip(200, 0.4, 'square', 0.3, 60);
             player.cx = player.home[0];

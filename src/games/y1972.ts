@@ -9,7 +9,7 @@ interface Ball {
   r: number;
 }
 
-const ROUND = 46;
+const BASE_ROUND = 46;
 
 /**
  * 1972 — two rectangles and a square, played the way a phone wants to hold it:
@@ -17,7 +17,9 @@ const ROUND = 46;
  */
 export function create1972(api: GameApi): MiniGame {
   let t = 0;
-  let lives = 4;
+  const ROUND = api.diff.time(BASE_ROUND);
+  const MAX_LIVES = api.diff.lives(4);
+  let lives = MAX_LIVES;
   let rallies = 0;
   let speed = 1;
   let paddleW = 0.26;
@@ -47,10 +49,13 @@ export function create1972(api: GameApi): MiniGame {
     });
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 5, run: () => api.say('Players in 1972 thought THIS was exciting.') },
     {
       at: 9,
+      when: () => rallies >= 5,
+      warn: 'You are rather good at this.',
       run: () => {
         speed = 1.35;
         balls.forEach((b) => {
@@ -62,6 +67,8 @@ export function create1972(api: GameApi): MiniGame {
     },
     {
       at: 13,
+      when: () => rallies >= 9,
+      warn: 'One ball is not enough for you, clearly.',
       run: () => {
         spawnBall();
         api.shout('SECOND BALL');
@@ -84,6 +91,7 @@ export function create1972(api: GameApi): MiniGame {
     },
     {
       at: 25,
+      warn: 'Last warning.',
       run: () => {
         for (let i = 0; i < 6; i++) spawnBall();
         api.shout('EIGHT BALLS');
@@ -125,7 +133,9 @@ export function create1972(api: GameApi): MiniGame {
         api.shout('LAST TEN SECONDS');
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
@@ -152,7 +162,7 @@ export function create1972(api: GameApi): MiniGame {
         ? balls.reduce((a, b) => (b.vy < 0 && b.y < a.y ? b : a), balls[0])
         : null;
       if (target) {
-        aiX += clamp(target.x / api.w - aiX, -1, 1) * (0.9 + speed * 0.5) * dt;
+        aiX += clamp(target.x / api.w - aiX, -1, 1) * api.diff.pace(0.9 + speed * 0.5) * dt;
       }
       aiX = clamp(aiX, aw / 2 / api.w, 1 - aw / 2 / api.w);
 
@@ -198,7 +208,7 @@ export function create1972(api: GameApi): MiniGame {
 
         if (b.y > api.h + 60) {
           balls.splice(i, 1);
-          lives--;
+          if (!script.mercy) lives--;
           api.audio.blip(140, 0.3, 'square', 0.3, 60);
           if (lives <= 0) {
             api.lose('Two rectangles beat you.');
@@ -216,7 +226,7 @@ export function create1972(api: GameApi): MiniGame {
 
       if (t >= ROUND) {
         api.win({
-          stat: lives === 4 ? `FLAWLESS · ${rallies} RALLIES` : `${rallies} RALLIES`,
+          stat: lives === MAX_LIVES ? `FLAWLESS · ${rallies} RALLIES` : `${rallies} RALLIES`,
           score: rallies,
         });
       }

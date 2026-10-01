@@ -18,8 +18,9 @@ export function create1962(api: GameApi): MiniGame {
   const shots: (Dot & { life: number })[] = [];
   let t = 0;
   let hits = 0;
-  const NEEDED = 4;
-  let lives = 3;
+  const NEEDED = api.diff.goal(4);
+  let lives = api.diff.lives(3);
+  const LIMIT = api.diff.time(60);
   let gravity = 1;
   let flicker = 0.04;
   let fade = 1;
@@ -49,10 +50,13 @@ export function create1962(api: GameApi): MiniGame {
     ship.a = -Math.PI / 2;
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 4, run: () => api.say('The computer this ran on cost about $120,000.') },
     {
       at: 10,
+      when: () => hits >= 1,
+      warn: 'Hm. You can aim.',
       run: () => {
         gravity = 2;
         api.say('The star has developed opinions.');
@@ -69,6 +73,8 @@ export function create1962(api: GameApi): MiniGame {
     },
     {
       at: 23,
+      when: () => hits >= 2,
+      warn: 'Two hits. Right.',
       run: () => {
         gravity = -1.3;
         api.shout('GRAVITY IS NOW\nA SUGGESTION');
@@ -91,9 +97,11 @@ export function create1962(api: GameApi): MiniGame {
     },
     {
       at: 52,
-      run: () => api.say('Eight seconds. The night shift wants the computer back.'),
+      run: () => api.say('The night shift wants the computer back.'),
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
@@ -198,7 +206,7 @@ export function create1962(api: GameApi): MiniGame {
       }
 
       // --- the star eats things ---
-      if (dist(ship.x, ship.y, cx(), cy()) < 22) {
+      if (dist(ship.x, ship.y, cx(), cy()) < 22 && !script.mercy) {
         lives--;
         api.audio.noise(0.4, 0.3, 700);
         if (lives <= 0) {
@@ -209,11 +217,11 @@ export function create1962(api: GameApi): MiniGame {
         respawn();
       }
 
-      if (t > 60) {
+      if (t > LIMIT) {
         api.lose('The night shift took the computer back.');
         return;
       }
-      api.hud(`HITS ${hits}/${NEEDED}    SHIPS ${lives}    ${Math.max(0, 60 - t).toFixed(0)}s`);
+      api.hud(`HITS ${hits}/${NEEDED}    SHIPS ${lives}    ${Math.max(0, LIMIT - t).toFixed(0)}s`);
     },
 
     draw() {
@@ -285,7 +293,7 @@ export function create1962(api: GameApi): MiniGame {
           alpha: clamp(3 - t, 0, 1),
         });
       }
-      timerBar(api, t, 60);
+      timerBar(api, t, LIMIT);
     },
   } satisfies MiniGame;
 }

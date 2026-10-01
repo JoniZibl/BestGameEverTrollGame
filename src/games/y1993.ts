@@ -31,6 +31,7 @@ interface Sprite {
 export function create1993(api: GameApi): MiniGame {
   let t = 0;
   let hp = 3;
+  let limit = 70;
   let kills = 0;
   let fov = 0.66;
   let fovWarp = 0;
@@ -46,7 +47,7 @@ export function create1993(api: GameApi): MiniGame {
     { x: 7.5, y: 5.5, alive: true, hurt: 0 },
     { x: 14.5, y: 8.5, alive: true, hurt: 0 },
   ];
-  const TARGETS = sprites.length;
+  let TARGETS = sprites.length;
 
   const solid = (x: number, y: number) => {
     const row = MAP[Math.floor(y)];
@@ -54,12 +55,15 @@ export function create1993(api: GameApi): MiniGame {
     return row[Math.floor(x)] !== '.';
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 1.2, run: () => api.shout('WELCOME TO THE\nTHIRD DIMENSION') },
     { at: 6, run: () => api.say('It is not actually three dimensions. Do not tell anyone.') },
     { at: 14, run: () => { breathe = 1; api.say('The walls are breathing. That is a rendering feature.'); } },
     {
       at: 22,
+      when: () => kills >= 2,
+      warn: 'Two down. Something is about to go wrong with the lens.',
       run: () => {
         fovWarp = 1;
         api.shout('FIELD OF VIEW: YES');
@@ -67,11 +71,16 @@ export function create1993(api: GameApi): MiniGame {
       },
     },
     { at: 28, run: () => { fovWarp = 0; api.say('Sorry. Settings menu was still a few years away.'); } },
-    { at: 40, run: () => api.say('They are faster now. That is all the patch notes said.') },
-  ]);
+      { at: 40, when: () => kills >= 3, run: () => api.say('They are faster now. That is all the patch notes said.') },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      hp = api.diff.lives(3);
+      limit = api.diff.time(70);
+      TARGETS = Math.min(sprites.length, api.diff.goal(5));
     },
 
     update(dt) {
@@ -124,13 +133,13 @@ export function create1993(api: GameApi): MiniGame {
         if (!s.alive) continue;
         const d = Math.hypot(s.x - px.x, s.y - px.y);
         if (d < 7) {
-          const sp = t > 40 ? 1.9 : 1.2;
+          const sp = api.diff.pace(t > 40 ? 1.9 : 1.2);
           const sx = s.x + ((px.x - s.x) / d) * sp * dt;
           const sy = s.y + ((px.y - s.y) / d) * sp * dt;
           if (!solid(sx, s.y)) s.x = sx;
           if (!solid(s.x, sy)) s.y = sy;
         }
-        if (d < 0.7) {
+        if (d < 0.7 && !script.mercy) {
           hp--;
           api.audio.noise(0.4, 0.3, 500);
           s.x += (s.x - px.x) * 2;
@@ -142,11 +151,11 @@ export function create1993(api: GameApi): MiniGame {
         }
       }
 
-      if (t > 70) {
+      if (t > limit) {
         api.lose('The corridor outlasted you.');
         return;
       }
-      api.hud(`HEALTH ${hp}    TARGETS ${TARGETS - kills}    ${Math.max(0, 70 - t).toFixed(0)}s`);
+      api.hud(`HEALTH ${hp}    TARGETS ${TARGETS - kills}    ${Math.max(0, limit - t).toFixed(0)}s`);
     },
 
     draw() {

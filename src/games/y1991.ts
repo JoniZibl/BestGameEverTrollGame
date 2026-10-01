@@ -15,7 +15,7 @@ interface Thing {
 export function create1991(api: GameApi): MiniGame {
   let t = 0;
   let rings = 0;
-  let speed = 430;
+  let speed = 0;
   let looping = 0;
   let rolling = false;
   let hurt = 0;
@@ -44,15 +44,19 @@ export function create1991(api: GameApi): MiniGame {
     }
   };
 
-  const script = new Script([
-    { at: 7, run: () => { speed = 560; api.shout('FASTER'); } },
-    { at: 15, run: () => { speed = 700; api.say('This is the part the adverts showed.'); } },
-    { at: 24, run: () => { speed = 880; api.shout('TOO FAST'); api.audio.blip(300, 0.4, 'sawtooth', 0.25, 900); } },
-    { at: 32, run: () => api.say('You can let go now. It will not help.') },
-  ]);
+  const script = new Script(
+    [
+      { at: 9, when: () => rings >= 8, warn: 'Collecting, are we.', run: () => { speed = api.diff.pace(560); api.shout('FASTER'); } },
+      { at: 18, when: () => rings >= 20, run: () => { speed = api.diff.pace(700); api.say('This is the part the adverts showed.'); } },
+      { at: 27, when: () => rings >= 34, warn: 'Hold on.', run: () => { speed = api.diff.pace(880); api.shout('TOO FAST'); api.audio.blip(300, 0.4, 'sawtooth', 0.25, 900); } },
+      { at: 36, run: () => api.say('You can let go now. It will not help.') },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      speed = api.diff.pace(430);
       build();
     },
 
@@ -96,13 +100,14 @@ export function create1991(api: GameApi): MiniGame {
           Math.abs(o.x - player.x - 12) < 24 &&
           player.y + 30 > o.y
         ) {
+          if (script.mercy) continue;
           hurt = 1.4;
           api.audio.noise(0.3, 0.3, 900);
           if (rings === 0) {
             api.lose('No rings left to scatter.');
             return;
           }
-          rings = Math.max(0, rings - 12);
+          rings = Math.max(0, rings - api.diff.goal(12));
           api.shout('RINGS EVERYWHERE');
         }
       }

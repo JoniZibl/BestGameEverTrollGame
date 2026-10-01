@@ -8,6 +8,7 @@ export interface EraRecord {
 export interface Progress {
   version: number;
   seenIntro: boolean;
+  difficulty: DifficultyId | null;
   eras: Record<string, EraRecord>;
   /** Era ids plus secret fragment ids. */
   fragments: string[];
@@ -20,11 +21,14 @@ export interface Progress {
   lastEraPlayed: string | null;
 }
 
+import type { DifficultyId } from './difficulty';
+
 const KEY = 'gtm.progress.v1';
 
 export const emptyProgress = (): Progress => ({
   version: 1,
   seenIntro: false,
+  difficulty: null,
   eras: {},
   fragments: [],
   achievements: [],

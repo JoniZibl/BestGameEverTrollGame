@@ -34,6 +34,7 @@ interface Walker {
 export function create1985(api: GameApi): MiniGame {
   let t = 0;
   let lives = 3;
+  let reached = 0;
   let camMin = 0;
   let autoScroll = 0;
   let moving = false;
@@ -91,9 +92,20 @@ export function create1985(api: GameApi): MiniGame {
     plats.push({ x: GOAL_X, y: 430, w: 260, h: 40, amp: 0, phase: 0, vanished: 0, base: 430 });
   };
 
-  const script = new Script([
-    { at: 7, run: () => { moving = true; api.shout('GAMES USED TO\nBE HARDER'); } },
-    { at: 13, run: () => { vanishing = true; api.say('The floor is now optional.'); } },
+  const script = new Script(
+    [
+    {
+      at: 9,
+      when: () => reached > 700,
+      warn: 'You have done this before.',
+      run: () => { moving = true; api.shout('GAMES USED TO\nBE HARDER'); },
+    },
+    {
+      at: 15,
+      when: () => reached > 1600,
+      warn: 'Watch the floor.',
+      run: () => { vanishing = true; api.say('The floor is now optional.'); },
+    },
     {
       at: 19,
       run: () => {
@@ -106,7 +118,7 @@ export function create1985(api: GameApi): MiniGame {
     {
       at: 31,
       run: () => {
-        autoScroll = 80;
+        autoScroll = api.diff.pace(80);
         api.shout('KEEP UP');
         api.audio.blip(140, 0.4, 'square', 0.3, 320);
       },
@@ -120,15 +132,23 @@ export function create1985(api: GameApi): MiniGame {
     },
     {
       at: 50,
+      warn: 'Keep moving.',
       run: () => {
-        autoScroll = 125;
+        autoScroll = api.diff.pace(125);
         api.shout('FASTER');
         api.audio.blip(180, 0.4, 'square', 0.3, 420);
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   const die = (why: string) => {
+    if (script.mercy) {
+      player.y = Math.min(player.y, WORLD_H - 220);
+      player.vy = 0;
+      return;
+    }
     lives--;
     api.audio.blip(300, 0.5, 'square', 0.3, 70);
     if (lives <= 0) {
@@ -144,11 +164,13 @@ export function create1985(api: GameApi): MiniGame {
 
   return {
     start() {
+      lives = api.diff.lives(3);
       build();
     },
 
     update(dt) {
       t += dt;
+      reached = Math.max(reached, player.x);
       script.update(t);
       camMin += autoScroll * dt;
 

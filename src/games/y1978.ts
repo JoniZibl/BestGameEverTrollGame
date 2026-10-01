@@ -21,7 +21,7 @@ interface Shot {
 /** 1978 — the aliens start as a polite grid and end as a personal problem. */
 export function create1978(api: GameApi): MiniGame {
   let t = 0;
-  let lives = 4;
+  let lives = api.diff.lives(4);
   let kills = 0;
   let cool = 0;
   let dodge = false;
@@ -67,21 +67,29 @@ export function create1978(api: GameApi): MiniGame {
       vx: 90,
       vy: 0,
       size: Math.min(api.w, api.h) * 0.34,
-      hp: 22,
+      hp: api.diff.goal(22),
       boss: true,
     });
     api.shout('OH');
     api.audio.blip(70, 1.2, 'sawtooth', 0.3, 40);
   };
 
-  const script = new Script([
-    { at: 6, run: () => { dodge = true; api.say('Apparently the aliens learned something.'); } },
-    { at: 12, run: () => { rate = 1.7; api.say('And they have been practising.'); } },
-    { at: 19, run: () => { split = true; api.shout('THEY SPLIT NOW'); } },
-    { at: 26, run: () => { homing = true; api.say('They know where you live.'); } },
-    { at: 32, run: () => { shields = true; api.say('Now with shields. Two hits each.'); } },
-    { at: 38, run: () => spawnBoss() },
-  ]);
+  const script = new Script(
+    [
+      {
+        at: 8,
+        when: () => kills >= 6,
+        warn: 'They have been watching your aim.',
+        run: () => { dodge = true; api.say('Apparently the aliens learned something.'); },
+      },
+      { at: 14, when: () => kills >= 14, run: () => { rate = api.diff.pace(1.7); api.say('And they have been practising.'); } },
+      { at: 20, when: () => wave >= 2, warn: 'Right.', run: () => { split = true; api.shout('THEY SPLIT NOW'); } },
+      { at: 27, run: () => { homing = true; api.say('They know where you live.'); } },
+      { at: 33, when: () => wave >= 3, run: () => { shields = true; api.say('Now with shields. Two hits each.'); } },
+      { at: 40, when: () => wave >= 3 && kills >= 34, warn: 'Something larger is coming.', run: () => spawnBoss() },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   const buildBunkers = () => {
     bunkers.length = 0;
@@ -166,8 +174,8 @@ export function create1978(api: GameApi): MiniGame {
           }
           continue;
         }
-        a.x += a.vx * rate * dt;
-        a.y += (10 + (homing ? 26 : 0)) * rate * scale * dt;
+        a.x += a.vx * api.diff.pace(rate) * dt;
+        a.y += (10 + (homing ? 26 : 0)) * api.diff.pace(rate) * scale * dt;
         if (a.x < a.size || a.x > api.w - a.size) {
           a.vx *= -1;
           a.y += 14 * scale;
@@ -242,7 +250,7 @@ export function create1978(api: GameApi): MiniGame {
           const pr = { x: px - playerW() / 2, y: playerY() - 10 * scale, w: playerW(), h: 22 * scale };
           if (aabb({ x: s.x - 3, y: s.y - 6, w: 6, h: 12 }, pr)) {
             shots.splice(i, 1);
-            lives--;
+            if (!script.mercy) lives--;
             api.audio.noise(0.4, 0.3, 600);
             if (lives <= 0) {
               api.lose('Shot down by pixels.');

@@ -3,7 +3,7 @@ import { Script, fill, rand, text } from './helpers';
 
 const W = 420;
 const H = 640;
-const GAP_BASE = 190;
+const BASE_GAP = 190;
 
 interface Pipe {
   x: number;
@@ -17,7 +17,8 @@ export function create2013(api: GameApi): MiniGame {
   let score = 0;
   let paused = false;
   let dead = false;
-  let gap = GAP_BASE;
+  let gap = 190;
+  let target = 14;
   let speed = 150;
   let purchases = 0;
   let askedContinue = false;
@@ -47,22 +48,25 @@ export function create2013(api: GameApi): MiniGame {
     });
   };
 
-  const script = new Script([
+  const script = new Script(
+    [
     {
       at: 12,
+      when: () => score >= 3,
       run: () => {
         if (askedGap) return;
         askedGap = true;
         ask('WIDER GAPS', '€2.99', ['The gaps are quite narrow.', 'They need not be.'], () => {
-          gap = GAP_BASE + 30;
+          const was = gap;
+          gap = was + 34;
           window.setTimeout(() => {
-            gap = GAP_BASE - 10;
+            gap = was - 12;
             api.say('The wider gaps were a limited-time offer.');
           }, 9000);
         });
       },
     },
-    { at: 22, run: () => { speed = 190; api.shout('FASTER'); } },
+    { at: 22, when: () => score >= 5, warn: 'Five. Hm.', run: () => { speed = api.diff.pace(190); api.shout('FASTER'); } },
     {
       at: 30,
       run: () => {
@@ -71,7 +75,9 @@ export function create2013(api: GameApi): MiniGame {
         ask('SKIN: SLIGHTLY DIFFERENT BIRD', '€4.99', ['It is the same bird.', 'It is a different colour.'], () => {});
       },
     },
-  ]);
+  ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   const reset = () => {
     bird.y = H / 2;
@@ -97,6 +103,9 @@ export function create2013(api: GameApi): MiniGame {
 
   return {
     start() {
+      gap = Math.round(BASE_GAP * (api.diff.isEasy ? 1.22 : api.diff.isHard ? 0.84 : 1));
+      speed = api.diff.pace(150);
+      target = api.diff.goal(14);
       spawn = 0.6;
     },
 
@@ -126,7 +135,7 @@ export function create2013(api: GameApi): MiniGame {
           p.passed = true;
           score++;
           api.audio.blip(800, 0.06, 'square', 0.16, 1200);
-          if (score >= 14) {
+          if (score >= target) {
             api.win({
               stat: purchases === 0 ? `${score} PIPES, NOTHING BOUGHT` : `${score} PIPES, ${purchases} "PURCHASES"`,
               score,
@@ -146,7 +155,7 @@ export function create2013(api: GameApi): MiniGame {
         return;
       }
 
-      api.hud(`PIPES ${score}/14`);
+      api.hud(`PIPES ${score}/${target}`);
     },
 
     draw() {

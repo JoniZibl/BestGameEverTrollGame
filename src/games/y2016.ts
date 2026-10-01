@@ -5,6 +5,8 @@ import { Script, circle, clamp, fill, rand, text } from './helpers';
 export function create2016(api: GameApi): MiniGame {
   let t = 0;
   let caught = 0;
+  let need = 3;
+  let maxMiss = 14;
   let misses = 0;
   let ar = false;
   let fleeing = 0;
@@ -14,10 +16,13 @@ export function create2016(api: GameApi): MiniGame {
   const ball = { x: 0, y: 0, vx: 0, vy: 0, flying: false };
   let aim: { x: number; y: number } | null = null;
 
-  const script = new Script([
+  const script = new Script(
+    [
     { at: 6, run: () => api.say('It is a sphere with a face. Nobody questioned it.') },
     {
       at: 14,
+      when: () => caught >= 1,
+      warn: 'One down.',
       run: () => {
         ar = true;
         api.shout('AR MODE ON');
@@ -41,10 +46,14 @@ export function create2016(api: GameApi): MiniGame {
         });
       },
     },
-  ]);
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
+      need = api.diff.goal(3);
+      maxMiss = api.diff.lives(14);
       ball.x = api.w / 2;
       ball.y = api.h * 0.86;
     },
@@ -58,7 +67,7 @@ export function create2016(api: GameApi): MiniGame {
       creature.hop += dt * (ar ? 3.4 : 2.2);
       creature.x += creature.vx * dt;
       if (creature.x < 0.15 || creature.x > 0.85) creature.vx *= -1;
-      if (Math.random() < (ar ? 1.4 : 0.6) * dt) creature.vx = rand(-0.3, 0.3);
+      if (Math.random() < api.diff.pace(ar ? 1.4 : 0.6) * dt) creature.vx = rand(-0.3, 0.3);
       if (fleeing > 0) {
         fleeing -= dt;
         creature.y = 0.38 - Math.sin(clamp(fleeing, 0, 1) * Math.PI) * 0.1;
@@ -87,12 +96,12 @@ export function create2016(api: GameApi): MiniGame {
           caught++;
           fleeing = 1;
           api.audio.jingle([72, 76, 79], 0.07, 'sine');
-          api.shout(caught >= 3 ? 'CAUGHT' : 'GOTCHA');
+          api.shout(caught >= need ? 'CAUGHT' : 'GOTCHA');
           ball.flying = false;
           ball.x = api.w / 2;
           ball.y = api.h * 0.86;
           ball.vx = ball.vy = 0;
-          if (caught >= 3) {
+          if (caught >= need) {
             window.setTimeout(() => api.win({ stat: `3 CAUGHT, ${misses} THROWN AWAY` }), 1200);
             return;
           }
@@ -102,14 +111,14 @@ export function create2016(api: GameApi): MiniGame {
           ball.x = api.w / 2;
           ball.y = api.h * 0.86;
           ball.vx = ball.vy = 0;
-          if (misses >= 14) {
+          if (misses >= maxMiss) {
             api.lose('Out of spheres. It is still there, judging you.');
             return;
           }
         }
       }
 
-      api.hud(`CAUGHT ${caught}/3    THROWN ${misses + caught}`);
+      api.hud(`CAUGHT ${caught}/${need}    THROWN ${misses + caught} / ${maxMiss}`);
     },
 
     draw() {

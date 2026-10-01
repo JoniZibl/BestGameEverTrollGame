@@ -3,8 +3,8 @@ import { Script, fill, randInt, text, timerBar } from './helpers';
 
 const W = 10;
 const H = 18;
-const ROUND = 45;
-const LINE_TARGET = 4;
+const BASE_ROUND = 45;
+const BASE_TARGET = 4;
 
 /** Our own block set. Same idea, different shapes — four of them, all ours. */
 const SHAPES: number[][][] = [
@@ -39,6 +39,8 @@ export function create1984(api: GameApi): MiniGame {
   let t = 0;
   let speed = 1;
   let lines = 0;
+  const ROUND = api.diff.time(BASE_ROUND);
+  const LINE_TARGET = api.diff.goal(BASE_TARGET);
   let fallTimer = 0;
   let moveTimer = 0;
   let topped = false;
@@ -110,14 +112,19 @@ export function create1984(api: GameApi): MiniGame {
     api.audio.blip(300 + mult * 30, 0.2, 'square', 0.25, 700);
   };
 
-  const script = new Script([
-    { at: 10, run: () => bump(2, 'Okay. Maybe we made this too easy.') },
-    { at: 18, run: () => bump(3, 'Still comfortable?') },
-    { at: 25, run: () => bump(5, 'Hm.') },
-    { at: 31, run: () => bump(8, 'You are doing better than expected.') },
-    { at: 37, run: () => bump(16, 'Right.') },
-    { at: 39, run: () => api.say('This is roughly level 29. People trained for years.') },
-  ]);
+  // Each speed step waits for a line, so it reads as a reply to the player
+  // rather than a clock running out.
+  const script = new Script(
+    [
+      { at: 12, when: () => lines >= 1, run: () => bump(2, 'Okay. Maybe we made this too easy.') },
+      { at: 20, when: () => lines >= 2, run: () => bump(3, 'Still comfortable?') },
+      { at: 27, when: () => lines >= 3, warn: 'Hm.', run: () => bump(5, 'Hm.') },
+      { at: 33, when: () => lines >= LINE_TARGET - 1, warn: 'One line left. About that.', run: () => bump(8, 'You are doing better than expected.') },
+      { at: 39, warn: 'Right.', run: () => bump(16, 'Right.') },
+      { at: 41, run: () => api.say('This is roughly level 29. People trained for years.') },
+    ],
+    { say: api.say, grace: api.diff.grace },
+  );
 
   return {
     start() {
@@ -160,7 +167,7 @@ export function create1984(api: GameApi): MiniGame {
         return;
       }
 
-      const interval = Math.max(0.035, 0.8 / speed);
+      const interval = Math.max(0.035, 0.8 / api.diff.pace(speed));
       fallTimer += dt * (api.input.downKey ? 8 : 1);
       if (fallTimer >= interval) {
         fallTimer = 0;
