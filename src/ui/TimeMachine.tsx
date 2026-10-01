@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../core/state';
 import { ERAS } from '../games/registry';
 import { audio } from '../core/audio';
 
 /** The hub: a timeline of years, and a machine that is missing most of its parts. */
 export function TimeMachine() {
-  const { progress, openEra, bump, addFragment, note, allErasDone, go, tuning } = useGame();
+  const { progress, openEra, bump, addFragment, note, allErasDone, go, tuning, reset } = useGame();
   const [clickedYear, setClickedYear] = useState<string | null>(null);
+  const [confirmWipe, setConfirmWipe] = useState(false);
+  const started = ERAS.some((e) => progress.eras[e.id]);
+  const footRef = useRef<HTMLElement>(null);
+
+  // Opening the confirm at the end of a long list should not leave it below the fold.
+  useEffect(() => {
+    if (confirmWipe) footRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [confirmWipe]);
 
   // A year opens only once the one before it has actually been won.
   const unlockedIndex = ERAS.reduce((acc, e, i) => (progress.eras[e.id]?.won ? i + 1 : acc), 0);
@@ -78,6 +86,35 @@ export function TimeMachine() {
           </button>
         </div>
       )}
+
+      <footer className="machine-foot" ref={footRef}>
+        {confirmWipe ? (
+          <>
+            <span className="wipe-warn">
+              This erases every year, fragment and achievement. There is no undo, which
+              is also historically accurate.
+            </span>
+            <div className="wipe-actions">
+              <button
+                className="btn small"
+                onClick={() => {
+                  audio.blip(160, 0.3, 'square', 0.25, 60);
+                  reset();
+                }}
+              >
+                YES, ERASE IT
+              </button>
+              <button className="btn ghost small" onClick={() => setConfirmWipe(false)}>
+                KEEP IT
+              </button>
+            </div>
+          </>
+        ) : (
+          <button className="btn ghost small" onClick={() => setConfirmWipe(true)}>
+            {started ? 'RESET EVERYTHING' : 'RESET'}
+          </button>
+        )}
+      </footer>
     </div>
   );
 }
