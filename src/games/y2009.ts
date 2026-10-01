@@ -16,6 +16,7 @@ export function create2009(api: GameApi): MiniGame {
   let missed = 0;
   let energy = 10;
   let energyGagDone = false;
+  let adDone = false;
   let paused = false;
   let spawn = 0;
   const bubbles: Bubble[] = [];
@@ -44,7 +45,7 @@ export function create2009(api: GameApi): MiniGame {
 
       spawn -= dt;
       if (spawn <= 0) {
-        spawn = clamp(0.62 - t * 0.012, 0.22, 0.7);
+        spawn = clamp(0.58 - t * 0.011, 0.18, 0.7);
         const r = rand(s.w * 0.08, s.w * 0.14);
         bubbles.push({ x: rand(s.x + r, s.x + s.w - r), y: s.y + s.h + r, r, vy: -rand(60, 110), popped: 0 });
       }
@@ -89,7 +90,7 @@ export function create2009(api: GameApi): MiniGame {
                 { label: 'BUY 5 LIVES', value: 'buy' },
               ],
               onPick: () => {
-                energy = 25;
+                energy = 30;
                 paused = false;
                 api.shout('JUST KIDDING');
                 api.say('Keep playing. We would not actually do that to you.');
@@ -109,14 +110,30 @@ export function create2009(api: GameApi): MiniGame {
               },
             });
           }
-          if (taps >= 20) {
+          if (taps === 22 && !adDone) {
+            adDone = true;
+            paused = true;
+            api.popup({
+              title: 'AD',
+              lines: ['A different game would like your attention.', 'It is the same game.'],
+              buttons: [
+                { label: 'CLOSE \u2715', value: 'x', primary: true },
+                { label: 'INSTALL', value: 'i' },
+              ],
+              onPick: () => {
+                paused = false;
+                api.say('That was 4 seconds of your life. Monetised.');
+              },
+            });
+          }
+          if (taps >= 30) {
             api.win({ stat: `${taps} TAPS, ${missed} ESCAPED`, score: taps });
             return;
           }
         }
       }
 
-      api.hud(`POPPED ${taps}/20    ENERGY ${Math.max(0, energy)}`);
+      api.hud(`POPPED ${taps}/30    ENERGY ${Math.max(0, energy)}`);
     },
 
     draw() {

@@ -19,6 +19,9 @@ export function BriefScreen() {
           <span key={l}>{l}</span>
         ))}
       </h1>
+      <p className="brief-goal">
+        <span>GOAL</span> {era.goal}
+      </p>
       <p className="brief-controls">{era.controls}</p>
       <div className="brief-actions">
         <button className="btn huge" onClick={start}>

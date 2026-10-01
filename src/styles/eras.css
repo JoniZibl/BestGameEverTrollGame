@@ -1,220 +1,134 @@
 /* ============================================================
-   The website ages with the player. Each theme is roughly what
-   screens looked like when that era's games were new.
+   The site keeps ONE identity: cream, dark brown, one red accent.
+   Only the playfield itself shifts when you step into an era —
+   the frame around it never moves.
    ============================================================ */
 
-/* 1962 — a borrowed radar scope. */
-.app[data-theme='oscilloscope'] {
-  --bg: #eee4d1;
-  --fg: #3b2c27;
-  --dim: #a89584;
-  --accent: #6d5a4a;
-  --warn: #8a6a3a;
-  --radius: 0px;
-  --border: 3px;
-  --scanline: 0.05;
-  --display: 'Rowdies', 'Arial Black', sans-serif;
-  --body: 'VT323', 'Courier New', monospace;
-  --panel: rgba(59, 44, 39, 0.06);
-}
-.app[data-theme='oscilloscope'] .app-inner {
-  animation: flicker 5s infinite steps(24);
-}
-.app[data-theme='oscilloscope'] p,
-.app[data-theme='oscilloscope'] .fact {
-  font-size: 1.15em;
+.stage {
+  background: var(--bg);
+  --stage-scan: 0;
+  transition: background 400ms ease;
 }
 
-@keyframes flicker {
-  0%, 96%, 100% { opacity: 1; }
-  97% { opacity: 0.94; }
-  98% { opacity: 1; }
-  99% { opacity: 0.9; }
-}
-
-/* 1972–1980 — the cabinet. */
-.app[data-theme='arcade'] {
-  --bg: #f1e7d6;
-  --fg: #412f2a;
-  --dim: #a8968a;
-  --accent: #c4452f;
-  --warn: #d08c1e;
-  --radius: 0px;
-  --border: 5px;
-  --scanline: 0.035;
-  --panel: rgba(65, 47, 42, 0.07);
-}
-
-/* 1984–1985 — eight bits, more colours than strictly necessary. */
-.app[data-theme='bit8'] {
-  --bg: #f4ead2;
-  --fg: #38292a;
-  --dim: #9e8e82;
-  --accent: #d2552a;
-  --warn: #3f7d4e;
-  --radius: 0px;
-  --border: 4px;
-  --scanline: 0.03;
-  --panel: rgba(56, 41, 42, 0.08);
-}
-.app[data-theme='bit8'] .result-kicker,
-.app[data-theme='bit8'] .brief-year,
-.app[data-theme='bit8'] .hud-line,
-.app[data-theme='bit8'] .fragments {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-}
-.app[data-theme='bit8'] .btn {
-  box-shadow: 5px 5px 0 color-mix(in srgb, var(--fg) 30%, transparent);
-}
-
-/* 1992–1993 — sixteen bits, bevels, a purple streak. */
-.app[data-theme='bit16'] {
-  --bg: #ece2d3;
-  --fg: #31262f;
-  --dim: #948a97;
-  --accent: #8c4bb3;
-  --warn: #c8842a;
-  --radius: 2px;
-  --border: 3px;
-  --scanline: 0.035;
-  --panel: rgba(49, 38, 47, 0.08);
-}
-.app[data-theme='bit16'] .btn {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--fg) 85%, white) 0%, var(--fg) 100%);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25), 3px 3px 0 rgba(49, 38, 47, 0.3);
-}
-.app[data-theme='bit16'] .topbar {
-  background: linear-gradient(180deg, rgba(140, 75, 179, 0.12), transparent);
-}
-
-/* 1996 — fog, and a horizon that keeps its distance. */
-.app[data-theme='early3d'] {
-  --bg: #e6e0d1;
-  --fg: #2d2a25;
-  --dim: #8f8d82;
-  --accent: #4b7f6c;
-  --warn: #b5702e;
-  --radius: 3px;
-  --border: 2px;
-  --scanline: 0.03;
-  --panel: rgba(45, 42, 37, 0.07);
-}
-.app[data-theme='early3d'] .app-inner::after {
+/* Scanlines live on the playfield, not on the website. */
+.stage::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 45%, color-mix(in srgb, var(--bg) 85%, transparent) 100%);
+  z-index: 3;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, var(--stage-scan)) 0px,
+    rgba(0, 0, 0, var(--stage-scan)) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
 }
 
-/* 2000–2004 — the glossy web. The cream finally leaves. */
-.app[data-theme='web2'] {
+/* 1962 — a borrowed radar scope. */
+.stage[data-era='oscilloscope'] {
+  --bg: #ece2cf;
+  --accent: #6d5a4a;
+  --stage-scan: 0.07;
+}
+.stage[data-era='oscilloscope'] .game-canvas {
+  animation: flicker 5s infinite steps(24);
+}
+
+@keyframes flicker {
+  0%, 96%, 100% { opacity: 1; }
+  97% { opacity: 0.93; }
+  98% { opacity: 1; }
+  99% { opacity: 0.89; }
+}
+
+/* 1972–1980 — the cabinet. */
+.stage[data-era='arcade'] {
+  --stage-scan: 0.04;
+}
+
+/* 1984–1985 — eight bits. */
+.stage[data-era='bit8'] {
+  --bg: #f3e9d2;
+  --accent: #cf5a2c;
+  --stage-scan: 0.03;
+}
+
+/* 1992–1993 — sixteen bits, one purple streak. */
+.stage[data-era='bit16'] {
+  --bg: #ece3d2;
+  --accent: #8c4bb3;
+  --stage-scan: 0.02;
+}
+
+/* 1996 — fog. */
+.stage[data-era='early3d'] {
+  --bg: #e7e1d2;
+  --accent: #4b7f6c;
+}
+.stage[data-era='early3d']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 42%, color-mix(in srgb, var(--bg) 88%, transparent) 100%);
+}
+
+/* 2000–2004 — the glossy web, but only inside the screen. */
+.stage[data-era='web2'] {
   --bg: #eef2f7;
   --fg: #21303f;
   --dim: #8fa3b5;
   --accent: #2a6db5;
   --warn: #e0912b;
-  --radius: 10px;
-  --border: 2px;
-  --scanline: 0;
-  --body: 'Inter', system-ui, sans-serif;
-  --panel: rgba(33, 48, 63, 0.06);
-  --shadow: 0 6px 16px rgba(33, 48, 63, 0.14);
-}
-.app[data-theme='web2'] {
-  background: linear-gradient(180deg, #f7fbff 0%, #dfe8f2 100%);
-}
-.app[data-theme='web2'] .btn {
-  background: linear-gradient(180deg, #4a90d9 0%, #2a6db5 100%);
-  border-color: #1d5894;
-  color: #fff;
-}
-.app[data-theme='web2'] .btn.ghost {
-  background: linear-gradient(180deg, #ffffff 0%, #dfe8f2 100%);
-  color: var(--fg);
+  background: linear-gradient(180deg, #f7fbff 0%, #e2ebf4 100%);
 }
 
-/* 2009–2013 — flat, white, and very keen on rounded corners. */
-.app[data-theme='flat'] {
-  --bg: #f7f7f5;
+/* 2009–2013 — flat and very white. */
+.stage[data-era='flat'] {
+  --bg: #f8f8f6;
   --fg: #2b2b2b;
   --dim: #b5b5b0;
   --accent: #ff5a4f;
   --warn: #ffb300;
-  --radius: 14px;
-  --border: 0px;
-  --scanline: 0;
-  --body: 'Inter', system-ui, sans-serif;
-  --display: 'Rowdies', system-ui, sans-serif;
-  --panel: rgba(43, 43, 43, 0.05);
-  --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-}
-.app[data-theme='flat'] .btn {
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  border-radius: 999px;
-}
-.app[data-theme='flat'] .btn.ghost {
-  background: rgba(43, 43, 43, 0.06);
-  color: var(--fg);
-}
-.app[data-theme='flat'] .topbar {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
 }
 
-/* 2017–2026 — dark, blurred, extremely confident. */
-.app[data-theme='modern'] {
+/* 2017–2020s — the screen goes dark. The website does not. */
+.stage[data-era='modern'] {
   --bg: #0e1116;
   --fg: #edf1f7;
   --dim: #5d6775;
   --accent: #7f9dff;
   --warn: #ffc457;
-  --radius: 16px;
-  --border: 0px;
-  --scanline: 0;
-  --body: 'Inter', system-ui, sans-serif;
-  --panel: rgba(255, 255, 255, 0.06);
-  --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
-}
-.app[data-theme='modern'] {
   background:
-    radial-gradient(1100px 620px at 20% -10%, rgba(127, 157, 255, 0.2), transparent 60%),
-    radial-gradient(900px 500px at 90% 110%, rgba(255, 110, 180, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 20% -10%, rgba(127, 157, 255, 0.22), transparent 60%),
+    radial-gradient(700px 420px at 90% 110%, rgba(255, 110, 180, 0.16), transparent 60%),
     #0e1116;
 }
-.app[data-theme='modern'] .btn {
-  background: linear-gradient(180deg, #8ea8ff, #5f7ff0);
-  color: #0b0e13;
-  border: none;
-  border-radius: 999px;
-}
-.app[data-theme='modern'] .btn.ghost {
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--fg);
-  backdrop-filter: blur(10px);
-}
-.app[data-theme='modern'] .topbar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(14px);
-}
-.app[data-theme='modern'] .popup,
-.app[data-theme='modern'] .gameover {
-  background: rgba(22, 26, 34, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.stage[data-era='modern'] .popup {
+  background: rgba(22, 26, 34, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(18px);
 }
-.app[data-theme='modern'] .toast {
-  background: rgba(255, 255, 255, 0.1);
+.stage[data-era='modern'] .btn {
+  border-radius: 999px;
+}
+
+/* The caption / shout overlays sit inside the stage, so they follow the era too. */
+.stage[data-era] .caption {
   color: var(--fg);
-  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+}
+.stage[data-era] .shout {
+  color: var(--fg);
 }
 
 /* ============================================================
-   Era-specific game surfaces
+   Era-specific game surfaces (the three UI-driven years)
    ============================================================ */
 
 /* 2000 — dial-up */
@@ -228,6 +142,7 @@
   gap: 14px;
   padding: 20px;
   text-align: center;
+  color: var(--fg);
 }
 .era2000 h2 {
   font-size: clamp(1.4rem, 5vw, 2.6rem);
@@ -263,7 +178,6 @@
 }
 .era2000.arena {
   cursor: crosshair;
-  background: linear-gradient(180deg, rgba(42, 109, 181, 0.08), transparent);
 }
 .net-hud {
   position: absolute;
@@ -315,6 +229,7 @@
   inset: 0;
   display: grid;
   grid-template-rows: 1fr auto;
+  color: var(--fg);
 }
 .mmo-world {
   position: relative;
@@ -355,29 +270,29 @@
 }
 .quest-panel {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: min(92vw, 320px);
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  top: 12px;
+  right: 12px;
+  width: min(86%, 300px);
+  background: color-mix(in srgb, var(--bg) 93%, transparent);
   border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
-  border-radius: var(--radius);
-  padding: 14px;
+  border-radius: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  box-shadow: var(--shadow);
+  gap: 9px;
+  box-shadow: 0 6px 16px rgba(33, 48, 63, 0.18);
 }
 .quest-panel h3 {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 .objective {
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   opacity: 0.8;
 }
 .xp,
 .cast {
   height: 10px;
-  background: var(--panel);
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -394,23 +309,22 @@
   gap: 8px;
 }
 .quest-buttons .btn {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   padding: 0.6em 1em;
 }
 .mmo-chat {
   padding: 8px 14px;
-  font-family: var(--body);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   opacity: 0.6;
-  background: var(--panel);
-  max-height: 96px;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  max-height: 88px;
   overflow: hidden;
 }
 .mmo-chat b {
   color: var(--accent);
 }
 
-/* 2026 — please wait */
+/* 2020s — please wait */
 .era2026 {
   position: absolute;
   inset: 0;
@@ -418,24 +332,26 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
   padding: clamp(16px, 4vw, 40px);
   text-align: center;
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 .modern-logo {
   letter-spacing: 0.5em;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   opacity: 0.5;
   text-transform: uppercase;
 }
 .era2026 h2 {
-  font-size: clamp(1.3rem, 4.6vw, 2.4rem);
+  font-size: clamp(1.2rem, 4.4vw, 2.2rem);
   letter-spacing: 0.04em;
 }
 .modern-bar {
-  width: min(560px, 86vw);
+  width: min(520px, 86%);
   height: 6px;
-  background: var(--panel);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -447,17 +363,17 @@
 }
 .era2026 .detail {
   font-family: var(--mono);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   opacity: 0.6;
 }
 .checklist {
   list-style: none;
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   opacity: 0.45;
   letter-spacing: 0.08em;
 }
@@ -469,14 +385,14 @@
   color: var(--accent);
 }
 .eula-box {
-  max-width: 60ch;
-  max-height: 34vh;
+  max-width: 54ch;
+  max-height: 30vh;
   overflow-y: auto;
   text-align: left;
-  background: var(--panel);
-  border-radius: var(--radius);
-  padding: 16px;
-  font-size: 0.88rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 0.84rem;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -485,7 +401,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   cursor: pointer;
 }
 .check input {
@@ -494,8 +410,8 @@
   accent-color: var(--accent);
 }
 .qte-ring {
-  width: clamp(120px, 30vw, 200px);
-  height: clamp(120px, 30vw, 200px);
+  width: clamp(110px, 28vw, 180px);
+  height: clamp(110px, 28vw, 180px);
   border-radius: 50%;
   border: 3px solid var(--accent);
   animation: pulse 1.4s ease-in-out infinite;
@@ -506,9 +422,15 @@
 }
 .era2026 .sub {
   opacity: 0.5;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+.era2026 .btn {
+  background: linear-gradient(180deg, #8ea8ff, #5f7ff0);
+  color: #0b0e13;
+  border: none;
+  border-radius: 999px;
 }
 .era2026.cinematic {
   background: #05070b;
@@ -523,16 +445,16 @@
 .credit-wall {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 22px;
+  gap: 10px 20px;
   justify-content: center;
-  max-width: 70ch;
-  font-size: 0.7rem;
+  max-width: 60ch;
+  font-size: 0.68rem;
   letter-spacing: 0.3em;
   opacity: 0.4;
   text-transform: uppercase;
   animation: fadein 1.6s ease;
 }
 .era2026.cinematic h2 {
-  font-size: clamp(1.6rem, 6vw, 3.4rem);
+  font-size: clamp(1.5rem, 5.5vw, 3rem);
   animation: fadein 2.4s ease;
 }

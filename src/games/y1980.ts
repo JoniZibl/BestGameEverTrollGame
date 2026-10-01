@@ -24,6 +24,7 @@ export function create1980(api: GameApi): MiniGame {
   const walls: boolean[][] = [];
   const dots: boolean[][] = [];
   let dotTotal = 0;
+  const DOT_TARGET = 30;
   const player: Mover = { cx: 1, cy: 1, dx: 0, dy: 0, prog: 0 };
   const ghosts: Mover[] = [];
   let wantX = 0;
@@ -76,17 +77,17 @@ export function create1980(api: GameApi): MiniGame {
   const script = new Script([
     { at: 10, run: () => { phasing = true; api.shout('THE GHOSTS ARE\nTIRED OF LOSING'); api.audio.blip(180, 0.5, 'square', 0.3, 90); } },
     { at: 12, run: () => api.say('They have stopped respecting the walls.') },
-    {
-      at: 20,
-      run: () => {
-        reversed = true;
-        ghosts.forEach((g) => (g.scared = true));
-        api.shout('NEW RULES');
-        api.say('Now YOU chase THEM. Catch all three.');
-        api.audio.jingle([76, 72, 69, 64], 0.08, 'square');
-      },
-    },
+    { at: 24, run: () => api.say('They are getting quicker about it.') },
   ]);
+
+  const flipTheRules = () => {
+    if (reversed) return;
+    reversed = true;
+    ghosts.forEach((g) => (g.scared = true));
+    api.shout('NEW RULES');
+    api.say('Now YOU chase THEM. Catch all three.');
+    api.audio.jingle([76, 72, 69, 64], 0.08, 'square');
+  };
 
   const stepTowards = (m: Mover, tx: number, ty: number, flee: boolean) => {
     const opts: [number, number][] = [
@@ -153,10 +154,7 @@ export function create1980(api: GameApi): MiniGame {
             dots[player.cy][player.cx] = false;
             eaten++;
             api.audio.blip(360 + (eaten % 6) * 40, 0.04, 'square', 0.14);
-            if (eaten >= dotTotal) {
-              api.win({ stat: 'MAZE CLEARED', score: eaten });
-              return;
-            }
+            if (eaten >= DOT_TARGET && !reversed) flipTheRules();
           }
           const next = (wantX || wantY) && !isWall(player.cx + wantX, player.cy + wantY);
           if (next) {
@@ -170,7 +168,7 @@ export function create1980(api: GameApi): MiniGame {
       }
 
       // ghosts
-      const gSpeed = t < 2.5 ? 0 : reversed ? 3.2 : phasing ? 4.6 : 3.4;
+      const gSpeed = t < 2.5 ? 0 : reversed ? 3.4 : t > 24 ? 5.2 : phasing ? 4.6 : 3.4;
       for (const g of ghosts) {
         if (g.caught) continue;
         if (g.dx === 0 && g.dy === 0) stepTowards(g, player.cx, player.cy, !!g.scared);
@@ -218,8 +216,8 @@ export function create1980(api: GameApi): MiniGame {
 
       api.hud(
         reversed
-          ? `CATCH THEM  ${ghosts.filter((g) => g.caught).length}/3`
-          : `DOTS ${eaten}/${dotTotal}    LIVES ${lives}`,
+          ? `CATCH THEM  ${ghosts.filter((g) => g.caught).length}/3    LIVES ${lives}`
+          : `DOTS ${eaten}/${DOT_TARGET}    LIVES ${lives}`,
       );
     },
 
@@ -280,7 +278,7 @@ export function create1980(api: GameApi): MiniGame {
       drawMover(player, api.colors.fg, false);
 
       text(api, '1980', 18, api.h - 18, 14, { align: 'left', kind: 'mono', alpha: 0.4 });
-      timerBar(api, t, 40);
+      timerBar(api, t, 55);
     },
   } satisfies MiniGame;
 }

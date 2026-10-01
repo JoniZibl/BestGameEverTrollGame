@@ -9,7 +9,7 @@ interface Ball {
   r: number;
 }
 
-const ROUND = 32;
+const ROUND = 46;
 
 /**
  * 1972 — two rectangles and a square, played the way a phone wants to hold it:
@@ -17,7 +17,7 @@ const ROUND = 32;
  */
 export function create1972(api: GameApi): MiniGame {
   let t = 0;
-  let lives = 5;
+  let lives = 4;
   let rallies = 0;
   let speed = 1;
   let paddleW = 0.26;
@@ -27,6 +27,8 @@ export function create1972(api: GameApi): MiniGame {
   let playerX = 0.5;
   let aiX = 0.5;
   let titleFade = 1;
+  let mirror = false;
+  let ghost = false;
   const balls: Ball[] = [];
 
   const ballR = () => Math.max(6, Math.min(api.w, api.h) * 0.022);
@@ -95,6 +97,34 @@ export function create1972(api: GameApi): MiniGame {
         api.say('The opponent has grown. Historians are unsure how.');
       },
     },
+    {
+      at: 33,
+      run: () => {
+        mirror = true;
+        api.shout('CONTROLS\nREVERSED');
+        api.audio.blip(520, 0.3, 'square', 0.3, 140);
+      },
+    },
+    {
+      at: 38,
+      run: () => {
+        mirror = false;
+        ghost = true;
+        api.say('Returned to normal. The ball, however, is now shy.');
+      },
+    },
+    {
+      at: 43,
+      run: () => {
+        aiW = 0.2;
+        speed = 1.9;
+        balls.forEach((b) => {
+          b.vx *= 1.3;
+          b.vy *= 1.3;
+        });
+        api.shout('LAST TEN SECONDS');
+      },
+    },
   ]);
 
   return {
@@ -111,9 +141,10 @@ export function create1972(api: GameApi): MiniGame {
 
       const pw = paddleW * api.w;
       if (api.input.left || api.input.right) {
-        playerX += api.input.axisX * 1.25 * dt;
+        playerX += api.input.axisX * (mirror ? -1 : 1) * 1.25 * dt;
       } else if (api.input.pointerX > 0) {
-        playerX += (api.input.pointerX / api.w - playerX) * clamp(dt * 12, 0, 1);
+        const want = mirror ? 1 - api.input.pointerX / api.w : api.input.pointerX / api.w;
+        playerX += (want - playerX) * clamp(dt * 12, 0, 1);
       }
       playerX = clamp(playerX, pw / 2 / api.w, 1 - pw / 2 / api.w);
 
@@ -186,7 +217,7 @@ export function create1972(api: GameApi): MiniGame {
 
       if (t >= ROUND) {
         api.win({
-          stat: lives === 5 ? `FLAWLESS · ${rallies} RALLIES` : `${rallies} RALLIES`,
+          stat: lives === 4 ? `FLAWLESS · ${rallies} RALLIES` : `${rallies} RALLIES`,
           score: rallies,
         });
       }
@@ -218,9 +249,12 @@ export function create1972(api: GameApi): MiniGame {
       ctx.fill();
 
       balls.forEach((b) => {
+        // 1972 had no alpha channel. We are taking liberties.
+        ctx.globalAlpha = ghost ? 0.35 + Math.abs(Math.sin(t * 7 + b.x * 0.01)) * 0.65 : 1;
         circle(ctx, b.x, b.y, b.r);
         ctx.fill();
       });
+      ctx.globalAlpha = 1;
       ctx.restore();
 
       timerBar(api, t, ROUND);

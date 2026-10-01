@@ -22,6 +22,11 @@ export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: 
         <h1 className="giant">{era.label}</h1>
         <h2 className="result-title">{era.title}</h2>
         {stat ? <p className="result-stat">{stat}</p> : null}
+        {!won ? (
+          <p className="result-missed">
+            No fragment for this one. The machine still needs {era.label} done properly.
+          </p>
+        ) : null}
       </div>
 
       <p className="fact">{era.fact}</p>
@@ -60,6 +65,17 @@ export function ResultCard({ era, won, stat }: { era: Era; won: boolean; stat?: 
       )}
 
       <div className="result-actions">
+        {!won ? (
+          <button
+            className="btn"
+            onClick={() => {
+              audio.blip(560, 0.1, 'square', 0.2, 900);
+              openEra(era.id);
+            }}
+          >
+            TRY {era.label} AGAIN
+          </button>
+        ) : null}
         {next ? (
           <button
             className="btn huge"

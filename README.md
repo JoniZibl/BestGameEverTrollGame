@@ -6,12 +6,13 @@ You arrive in 1962 with a broken time machine. Every year you visit has a game i
 Each game starts exactly as you remember the genre — and then, within a few seconds,
 goes somewhere it should not. Survive the year, collect a time fragment, travel on.
 
-The joke is not only in the games. **The whole website ages with you**: 1962 is a
-flickering cream-and-brown terminal, 1984 is eight-bit, 2000 is glossy web gradients,
-2013 is flat mobile UI, and the 2020s are dark glass with a day-one patch. Same site,
-seventy years of interface design.
 
 > SHORT. FUNNY. PLAYABLE. SURPRISING. HISTORICALLY INTERESTING.
+
+The site itself never changes its look: cream, dark brown, one red accent, from the
+title screen to the ending. Only the playfield shifts when you step into a year —
+1962 flickers, 1984 goes eight-bit, the 2020s go dark — and the frame around it
+stays exactly where it was.
 
 ## The timeline
 
@@ -69,8 +70,8 @@ src/
     helpers.ts     drawing + a tiny Script class that fires the twists
   ui/            title, confirm, intro, time machine, play host, results, ending
   styles/
-    global.css     layout and typography
-    eras.css       one theme block per era — this is where the site ages
+    global.css     the one visual identity: layout, typography, buttons
+    eras.css       per-era palettes, scoped to `.stage` so only the game changes
 ```
 
 ### Adding a year
@@ -95,11 +96,18 @@ const script = new Script([
 ]);
 ```
 
-## Failing is fine
+## Failing is fine. It is just not free.
 
-Losing does not block the timeline. The game over screen offers TRY AGAIN and
-CONTINUE ANYWAY, and history moves on either way — with a slightly worse entry in
-your record.
+Losing never blocks the timeline: the game over screen offers TRY AGAIN and CONTINUE
+ANYWAY, and the next year unlocks either way. But a **time fragment is only awarded
+for an actual win**, so a year you merely survived shows up on the timeline as
+`NO FRAGMENT · RETRY` and the machine stays broken until you go back and do it
+properly. All twenty fragments means winning all fifteen years and finding the five
+that are hidden somewhere else.
+
+Each year states its win condition before it starts — survive 46 seconds, clear four
+lines, catch all three ghosts, find five crystals in the fog — and most of them get
+genuinely difficult before the end.
 
 ## Originality and copyright
 

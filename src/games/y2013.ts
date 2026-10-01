@@ -2,7 +2,7 @@ import type { GameApi, MiniGame } from '../core/types';
 import { aabb, clamp, fill, text } from './helpers';
 
 const WORLD_H = 600;
-const GOAL = 2100;
+const GOAL = 3400;
 
 interface Plat {
   x: number;
@@ -18,6 +18,8 @@ export function create2013(api: GameApi): MiniGame {
   let gravityPaid = true;
   let askedDouble = false;
   let askedGravity = false;
+  let askedCheckpoint = false;
+  let checkpointX = 40;
   let paused = false;
   let jumpsUsed = 0;
   let purchases = 0;
@@ -29,7 +31,11 @@ export function create2013(api: GameApi): MiniGame {
     { x: 1090, y: 460, w: 180 },
     { x: 1360, y: 330, w: 220 },
     { x: 1680, y: 460, w: 200 },
-    { x: 1960, y: 430, w: 320 },
+    { x: 1960, y: 430, w: 220 },
+    { x: 2270, y: 350, w: 180 },
+    { x: 2540, y: 440, w: 160 },
+    { x: 2800, y: 320, w: 200 },
+    { x: 3100, y: 430, w: 420 },
   ];
 
   const ask = (title: string, price: string, lines: string[], unlock: () => void) => {
@@ -91,6 +97,14 @@ export function create2013(api: GameApi): MiniGame {
         }
       }
 
+      if (!askedCheckpoint && player.x > 1900) {
+        askedCheckpoint = true;
+        ask('CHECKPOINT PACK', '\u20ac1.99', ['Save your progress here.', 'Progress is a premium feature.'], () => {
+          checkpointX = player.x;
+        });
+        return;
+      }
+
       if (!askedGravity && t > 14) {
         askedGravity = true;
         gravityPaid = false;
@@ -118,7 +132,7 @@ export function create2013(api: GameApi): MiniGame {
       }
 
       if (player.y > WORLD_H + 100) {
-        player.x = Math.max(40, player.x - 260);
+        player.x = Math.max(checkpointX, player.x - 320);
         player.y = 200;
         player.vy = 0;
         api.say('Respawn is free. For now.');

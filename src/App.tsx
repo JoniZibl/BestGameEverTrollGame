@@ -8,35 +8,20 @@ import { BriefScreen } from './ui/BriefScreen';
 import { PlayScreen } from './ui/PlayScreen';
 import { EndingScreen } from './ui/EndingScreen';
 import { TopBar, Toasts } from './ui/Chrome';
-import { ERAS } from './games/registry';
 import { audio } from './core/audio';
-import type { ThemeId } from './core/types';
-
-/** The whole site ages with the player: 1962 terminal, 2020s glass. */
-function shellTheme(lastPlayed: string | null, eras: Record<string, unknown>): ThemeId {
-  const played = ERAS.filter((e) => eras[e.id]);
-  const latest = lastPlayed ? ERAS.find((e) => e.id === lastPlayed) : undefined;
-  const ref = latest ?? played[played.length - 1];
-  return ref?.theme ?? 'oscilloscope';
-}
 
 export default function App() {
   const { screen, era, progress, markIntroSeen, note, addFragment, allErasDone, grant } = useGame();
 
-  const theme: ThemeId =
-    screen === 'play' || screen === 'brief'
-      ? era?.theme ?? 'oscilloscope'
-      : screen === 'ending'
-        ? 'modern'
-        : shellTheme(progress.lastEraPlayed, progress.eras);
-
+  // The site keeps one identity. Only the playfield changes era, inside GameHost.
   useEffect(() => {
     if (screen === 'intro') markIntroSeen();
   }, [screen, markIntroSeen]);
 
   useEffect(() => {
-    if (screen !== 'play') audio.setEra(theme);
-  }, [theme, screen]);
+    if (screen === 'play' && era) audio.setEra(era.theme);
+    else audio.setEra('arcade');
+  }, [screen, era]);
 
   useEffect(() => {
     if (allErasDone) grant('historian');
@@ -54,7 +39,7 @@ export default function App() {
   }, [screen, note, addFragment, progress.fragments]);
 
   return (
-    <div className="app" data-theme={theme} data-screen={screen}>
+    <div className="app" data-screen={screen}>
       <div className="app-inner">
         <TopBar />
         {screen === 'title' && <TitleScreen />}
@@ -66,7 +51,6 @@ export default function App() {
         {screen === 'ending' && <EndingScreen />}
         <Toasts />
       </div>
-      <div className="crt-overlay" aria-hidden="true" />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import type { GameApi, MiniGame } from '../core/types';
 import { Script, aabb, clamp, fill, text } from './helpers';
 
 const WORLD_H = 600;
-const GOAL_X = 3500;
+const GOAL_X = 5400;
 
 interface Plat {
   x: number;
@@ -33,6 +33,7 @@ export function create1985(api: GameApi): MiniGame {
   let moving = false;
   let vanishing = false;
   let gravity = 2000;
+  let slippery = false;
   let jumpV = -720;
   const plats: Plat[] = [];
   const walkers: Walker[] = [];
@@ -87,9 +88,24 @@ export function create1985(api: GameApi): MiniGame {
     {
       at: 31,
       run: () => {
-        autoScroll = 95;
+        autoScroll = 80;
         api.shout('KEEP UP');
         api.audio.blip(140, 0.4, 'square', 0.3, 320);
+      },
+    },
+    {
+      at: 40,
+      run: () => {
+        slippery = true;
+        api.say('Someone has waxed the platforms.');
+      },
+    },
+    {
+      at: 50,
+      run: () => {
+        autoScroll = 125;
+        api.shout('FASTER');
+        api.audio.blip(180, 0.4, 'square', 0.3, 420);
       },
     },
   ]);
@@ -123,7 +139,8 @@ export function create1985(api: GameApi): MiniGame {
         p.y = p.base + (moving && p.amp ? Math.sin(t * 1.6 + p.phase) * p.amp : 0);
       }
 
-      player.vx = api.input.axisX * 290;
+      const want = api.input.axisX * 300;
+      player.vx = slippery ? player.vx + (want - player.vx) * dt * 1.8 : want;
       if ((api.input.upPressed || api.input.actionPressed) && (player.onGround || coyote > 0)) {
         player.vy = jumpV;
         player.onGround = false;

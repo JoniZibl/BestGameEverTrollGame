@@ -107,6 +107,8 @@ export interface Era {
   /** One dry line shown before the game starts. */
   tagline: string[];
   controls: string;
+  /** The win condition, in four or five words, shown before you start. */
+  goal: string;
   theme: ThemeId;
   /** Rough length in seconds, shown on the timeline. */
   duration: number;

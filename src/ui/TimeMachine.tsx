@@ -53,8 +53,8 @@ export function TimeMachine() {
                 <span className="tl-dot">{done ? '●' : locked ? '○' : '◉'}</span>
                 <span className="tl-year">{e.label}</span>
                 <span className="tl-title">{locked ? 'LOCKED' : e.title}</span>
-                <span className="tl-stat">
-                  {done ? (won ? progress.eras[e.id]?.stat ?? 'COMPLETE' : 'SURVIVED, BARELY') : ''}
+                <span className={`tl-stat${done && !won ? ' missing' : ''}`}>
+                  {done ? (won ? (progress.eras[e.id]?.stat ?? 'COMPLETE') : 'NO FRAGMENT \u00b7 RETRY') : ''}
                 </span>
               </button>
             </li>

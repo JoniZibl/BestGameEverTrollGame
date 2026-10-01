@@ -38,11 +38,16 @@ export function create1993(api: GameApi): MiniGame {
   let flash = 0;
   let cool = 0;
   const px = { x: 1.5, y: 1.5, dir: 0 };
+  // Every one of these sits in an open cell. Check the map before moving them.
   const sprites: Sprite[] = [
-    { x: 12.5, y: 2.5, alive: true, hurt: 0 },
-    { x: 3.5, y: 12.5, alive: true, hurt: 0 },
+    { x: 13.5, y: 2.5, alive: true, hurt: 0 },
+    { x: 4.5, y: 12.5, alive: true, hurt: 0 },
     { x: 12.5, y: 13.5, alive: true, hurt: 0 },
+    { x: 7.5, y: 5.5, alive: true, hurt: 0 },
+    { x: 14.5, y: 8.5, alive: true, hurt: 0 },
   ];
+  const TARGETS = sprites.length;
+  let dragX: number | null = null;
 
   const solid = (x: number, y: number) => {
     const row = MAP[Math.floor(y)];
@@ -63,6 +68,7 @@ export function create1993(api: GameApi): MiniGame {
       },
     },
     { at: 28, run: () => { fovWarp = 0; api.say('Sorry. Settings menu was still a few years away.'); } },
+    { at: 40, run: () => api.say('They are faster now. That is all the patch notes said.') },
   ]);
 
   return {
@@ -77,14 +83,21 @@ export function create1993(api: GameApi): MiniGame {
       flash = Math.max(0, flash - dt * 4);
       fov = 0.66 + (fovWarp ? Math.sin(t * 2.2) * 1.5 + 1.4 : 0);
 
-      px.dir += -api.input.axisX * 2.1 * dt * -1;
+      px.dir += api.input.axisX * 2.1 * dt;
+      // Drag anywhere to look around; the trigger stays on the key.
+      if (api.input.pointerDown) {
+        if (dragX !== null) px.dir += (api.input.pointerX - dragX) * 0.006;
+        dragX = api.input.pointerX;
+      } else {
+        dragX = null;
+      }
       const mv = (api.input.up ? 1 : 0) - (api.input.downKey ? 1 : 0);
       const nx = px.x + Math.cos(px.dir) * mv * 2.6 * dt;
       const ny = px.y + Math.sin(px.dir) * mv * 2.6 * dt;
       if (!solid(nx, px.y)) px.x = nx;
       if (!solid(px.x, ny)) px.y = ny;
 
-      if (api.input.actionPressed && cool <= 0) {
+      if (api.input.actionKeyPressed && cool <= 0) {
         cool = 0.45;
         flash = 1;
         api.audio.noise(0.18, 0.35, 2600);
@@ -108,7 +121,7 @@ export function create1993(api: GameApi): MiniGame {
           kills++;
           api.audio.blip(240, 0.3, 'sawtooth', 0.3, 80);
           if (kills === 1) api.say('Three dimensions. Two of them are fake.');
-          if (kills >= 3) {
+          if (kills >= TARGETS) {
             api.win({ stat: `CLEARED IN ${t.toFixed(0)}s`, score: kills });
             return;
           }
@@ -118,9 +131,10 @@ export function create1993(api: GameApi): MiniGame {
       for (const s of sprites) {
         if (!s.alive) continue;
         const d = Math.hypot(s.x - px.x, s.y - px.y);
-        if (d < 6) {
-          const sx = s.x + ((px.x - s.x) / d) * 1.1 * dt;
-          const sy = s.y + ((px.y - s.y) / d) * 1.1 * dt;
+        if (d < 7) {
+          const sp = t > 40 ? 1.9 : 1.2;
+          const sx = s.x + ((px.x - s.x) / d) * sp * dt;
+          const sy = s.y + ((px.y - s.y) / d) * sp * dt;
           if (!solid(sx, s.y)) s.x = sx;
           if (!solid(s.x, sy)) s.y = sy;
         }
@@ -136,7 +150,11 @@ export function create1993(api: GameApi): MiniGame {
         }
       }
 
-      api.hud(`HEALTH ${hp}    TARGETS ${3 - kills}`);
+      if (t > 70) {
+        api.lose('The corridor outlasted you.');
+        return;
+      }
+      api.hud(`HEALTH ${hp}    TARGETS ${TARGETS - kills}    ${Math.max(0, 70 - t).toFixed(0)}s`);
     },
 
     draw() {

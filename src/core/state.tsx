@@ -120,7 +120,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (id: string, won: boolean, stat?: string, time?: number) => {
       const p = progressRef.current;
       const prev = p.eras[id];
-      const isNew = !p.fragments.includes(id);
+      // A fragment is only awarded for an actual win. Surviving moves the story
+      // on, but the machine stays broken until you do the year properly.
+      const isNew = won && !p.fragments.includes(id);
       progressRef.current = {
         ...p,
         eras: {

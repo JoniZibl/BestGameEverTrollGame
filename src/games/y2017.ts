@@ -17,6 +17,7 @@ export function create2017(api: GameApi): MiniGame {
   let looted = false;
   let finalPhase = false;
   let rivalWalking = false;
+  let rivalHunting = false;
   let won = false;
   const player = { x: 0, y: 0 };
   const rival: Dot = { x: 0, y: 0, vx: 0, vy: 0, alive: false };
@@ -36,11 +37,12 @@ export function create2017(api: GameApi): MiniGame {
 
   const script = new Script([
     { at: 0.6, run: () => api.shout('100 PLAYERS') },
-    { at: 3, run: () => drop(50, '50 remaining. You did nothing.') },
-    { at: 5, run: () => drop(20, '20 remaining. Still nothing.') },
-    { at: 7, run: () => drop(5, '5 remaining.') },
+    { at: 4, run: () => drop(50, '50 remaining. You did nothing.') },
+    { at: 8, run: () => drop(20, '20 remaining. Still nothing.') },
+    { at: 12, run: () => drop(8, '8 remaining. The circle disagrees with most of them.') },
+    { at: 16, run: () => drop(4, 'Four. One of them is you.') },
     {
-      at: 9,
+      at: 20,
       run: () => {
         drop(2);
         finalPhase = true;
@@ -51,7 +53,8 @@ export function create2017(api: GameApi): MiniGame {
         api.audio.jingle([36, 43, 48, 55], 0.22, 'sawtooth');
       },
     },
-    { at: 12.5, run: () => { rivalWalking = true; api.say('Your opponent is doing something.'); } },
+    { at: 24, run: () => { rivalHunting = true; api.say('Your opponent has spotted you.'); } },
+    { at: 31, run: () => { rivalHunting = false; rivalWalking = true; api.say('Your opponent is doing something.'); } },
   ]);
 
   return {
@@ -72,7 +75,7 @@ export function create2017(api: GameApi): MiniGame {
       if (won) return;
       t += dt;
       script.update(t);
-      zoneR = clamp(1 - t * 0.035, 0.34, 1);
+      zoneR = clamp(1 - t * 0.024, 0.28, 1);
 
       const sp = 270;
       player.x += api.input.axisX * sp * dt;
@@ -134,6 +137,18 @@ export function create2017(api: GameApi): MiniGame {
               () => api.win({ stat: looted ? 'WON. LOOTED. UNTOUCHED.' : 'WON WITHOUT FIRING' }),
               1600,
             );
+          }
+        } else if (rivalHunting) {
+          const d = Math.max(1, dist(rival.x, rival.y, player.x, player.y));
+          rival.x += ((player.x - rival.x) / d) * 180 * dt;
+          rival.y += ((player.y - rival.y) / d) * 180 * dt;
+          if (d < 24) {
+            hp -= 42 * dt;
+            if (Math.random() < 0.1) api.audio.blip(90, 0.12, 'sawtooth', 0.18);
+            if (hp <= 0) {
+              api.lose('Second place. Out of two.');
+              return;
+            }
           }
         } else {
           rival.x += Math.sin(t * 2) * 40 * dt;

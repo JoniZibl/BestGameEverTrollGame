@@ -18,12 +18,14 @@ export function create1962(api: GameApi): MiniGame {
   const shots: (Dot & { life: number })[] = [];
   let t = 0;
   let hits = 0;
+  const NEEDED = 4;
   let lives = 3;
   let gravity = 1;
   let flicker = 0.04;
   let fade = 1;
   let cool = 0;
   let mercy = false;
+  let shrink = false;
 
   const cx = () => api.w / 2;
   const cy = () => api.h / 2;
@@ -74,11 +76,22 @@ export function create1962(api: GameApi): MiniGame {
       },
     },
     {
-      at: 33,
+      at: 26,
+      run: () => {
+        shrink = true;
+        api.say('The rival has decided to be smaller about this.');
+      },
+    },
+    {
+      at: 40,
       run: () => {
         mercy = true;
         api.say('Fine. Here. Take it.');
       },
+    },
+    {
+      at: 52,
+      run: () => api.say('Eight seconds. The night shift wants the computer back.'),
     },
   ]);
 
@@ -128,12 +141,13 @@ export function create1962(api: GameApi): MiniGame {
       if (mercy) {
         rival.vx *= 0.97;
         rival.vy *= 0.97;
-      } else if (t > 16) {
+      } else if (t > 14) {
         const dx = ship.x - rival.x;
         const dy = ship.y - rival.y;
         const r = Math.max(1, Math.hypot(dx, dy));
-        rival.vx += (dx / r) * 26 * dt;
-        rival.vy += (dy / r) * 26 * dt;
+        const chase = t > 30 ? 46 : 28;
+        rival.vx += (dx / r) * chase * dt;
+        rival.vy += (dy / r) * chase * dt;
       }
       rival.x += rival.vx * dt;
       rival.y += rival.vy * dt;
@@ -158,13 +172,13 @@ export function create1962(api: GameApi): MiniGame {
         s.y += s.vy * dt;
         s.life -= dt;
         wrap(s);
-        const hitRadius = mercy ? 44 : 16;
+        const hitRadius = mercy ? 44 : shrink ? 11 : 17;
         if (dist(s.x, s.y, rival.x, rival.y) < hitRadius) {
           shots.splice(i, 1);
           hits++;
           api.audio.blip(220, 0.25, 'sine', 0.3, 60);
-          if (hits >= 3) {
-            api.win({ stat: `3 HITS IN ${t.toFixed(0)}s` });
+          if (hits >= NEEDED) {
+            api.win({ stat: `${NEEDED} HITS IN ${t.toFixed(0)}s` });
             return;
           }
           placeRival();
@@ -185,7 +199,11 @@ export function create1962(api: GameApi): MiniGame {
         respawn();
       }
 
-      api.hud(`HITS ${hits}/3    SHIPS ${lives}`);
+      if (t > 60) {
+        api.lose('The night shift took the computer back.');
+        return;
+      }
+      api.hud(`HITS ${hits}/${NEEDED}    SHIPS ${lives}    ${Math.max(0, 60 - t).toFixed(0)}s`);
     },
 
     draw() {
@@ -231,7 +249,7 @@ export function create1962(api: GameApi): MiniGame {
       ctx.restore();
 
       // rival
-      const rs = mercy ? 34 : 9;
+      const rs = mercy ? 34 : shrink ? 6 : 9;
       ctx.strokeRect(rival.x - rs, rival.y - rs, rs * 2, rs * 2);
 
       ctx.globalAlpha = fade;
@@ -247,7 +265,7 @@ export function create1962(api: GameApi): MiniGame {
           alpha: clamp(3 - t, 0, 1),
         });
       }
-      timerBar(api, t, 40);
+      timerBar(api, t, 60);
     },
   } satisfies MiniGame;
 }

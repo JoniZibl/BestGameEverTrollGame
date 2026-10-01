@@ -54,11 +54,12 @@ export function Game2004({ onWin, say, shout, audio, grant }: ReactGameProps) {
           }
           if (n === 6) say('Only 44 to go.');
           if (n === 9) say('You are allowed to leave, you know.');
-          if (n >= 12) {
+          if (n === 12) say('Your guild has logged off. They said to say hello.');
+          if (n >= 16) {
             setStage('over');
             window.setTimeout(() => {
               shout('QUEST COMPLETE?');
-              say('The village found the other 38 in a cupboard. Thank you for your service.');
+              say('The village found the other 34 in a cupboard. Thank you for your service.');
               window.setTimeout(() => onWin({ stat: `${n} MUSHROOMS, 1 LESSON`, score: n }), 2600);
             }, 600);
           }

@@ -13,6 +13,14 @@ const STEPS: Step[] = [
   { label: 'CONNECTING TO ACCOUNT', detail: () => 'verifying that you are you', ms: 1800 },
   { label: 'INSTALLING UPDATE', detail: (p) => `${Math.round(p * 100)}%`, ms: 1600 },
   { label: 'CHECKING FOR UPDATES', detail: () => 'there is another one', ms: 1500 },
+  { label: 'INSTALLING THAT UPDATE', detail: (p) => `${(p * 12.3).toFixed(1)} GB / 12.3 GB`, ms: 2000 },
+  { label: 'SYNCHRONISING COSMETICS YOU DO NOT OWN', detail: () => 'almost there', ms: 1700 },
+];
+
+const PRESSES = [
+  { shout: 'SPECTACULAR', line: '12,000 people worked on this game.' },
+  { shout: 'INCREDIBLE', line: 'Four studios. Three countries. Six years.' },
+  { shout: 'UNFORGETTABLE', line: "You're pressing one button." },
 ];
 
 /** 2026 — twelve thousand people worked on this. You press one button. */
@@ -22,6 +30,7 @@ export function Game2026({ onWin, say, shout, audio }: ReactGameProps) {
   const [eula, setEula] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [phase, setPhase] = useState<'load' | 'eula' | 'ready' | 'cinematic'>('load');
+  const [presses, setPresses] = useState(0);
   const [pressed, setPressed] = useState(false);
   const raf = useRef(0);
 
@@ -59,13 +68,19 @@ export function Game2026({ onWin, say, shout, audio }: ReactGameProps) {
 
   const press = () => {
     if (pressed) return;
-    setPressed(true);
-    audio.blip(180, 1.2, 'sine', 0.3, 60);
-    setPhase('cinematic');
-    shout('SPECTACULAR', 2200);
-    window.setTimeout(() => say('12,000 people worked on this game.'), 2300);
-    window.setTimeout(() => say("You're pressing one button."), 5200);
-    window.setTimeout(() => onWin({ stat: 'ONE BUTTON, PRESSED PERFECTLY' }), 7600);
+    const n = presses;
+    const step = PRESSES[Math.min(n, PRESSES.length - 1)];
+    audio.blip(180 + n * 40, 1.2, 'sine', 0.3, 60);
+    shout(step.shout, 1800);
+    window.setTimeout(() => say(step.line), 1600);
+    if (n + 1 >= PRESSES.length) {
+      setPressed(true);
+      setPhase('cinematic');
+      window.setTimeout(() => onWin({ stat: 'THREE BUTTONS, PRESSED PERFECTLY' }), 5200);
+    } else {
+      setPresses(n + 1);
+      window.setTimeout(() => say('Press it again. That was a cutscene.'), 3400);
+    }
   };
 
   if (phase === 'load') {
@@ -134,7 +149,9 @@ export function Game2026({ onWin, say, shout, audio }: ReactGameProps) {
         <button className="btn big" onClick={press}>
           PRESS
         </button>
-        <p className="sub">this is the gameplay</p>
+        <p className="sub">
+          {presses === 0 ? 'this is the gameplay' : `prompt ${presses + 1} of ${PRESSES.length}`}
+        </p>
       </div>
     );
   }

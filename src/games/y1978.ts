@@ -21,7 +21,7 @@ interface Shot {
 /** 1978 — the aliens start as a polite grid and end as a personal problem. */
 export function create1978(api: GameApi): MiniGame {
   let t = 0;
-  let lives = 3;
+  let lives = 4;
   let kills = 0;
   let cool = 0;
   let dodge = false;
@@ -29,6 +29,8 @@ export function create1978(api: GameApi): MiniGame {
   let homing = false;
   let rate = 1;
   let bossSpawned = false;
+  let wave = 1;
+  let shields = false;
   let px = 0;
   const aliens: Alien[] = [];
   const shots: Shot[] = [];
@@ -48,7 +50,7 @@ export function create1978(api: GameApi): MiniGame {
           vx: 40 * u() * 1.4,
           vy: 0,
           size: sz,
-          hp: 1,
+          hp: shields ? 2 : 1,
         });
       }
     }
@@ -63,7 +65,7 @@ export function create1978(api: GameApi): MiniGame {
       vx: 90,
       vy: 0,
       size: Math.min(api.w, api.h) * 0.34,
-      hp: 14,
+      hp: 22,
       boss: true,
     });
     api.shout('OH');
@@ -71,11 +73,12 @@ export function create1978(api: GameApi): MiniGame {
   };
 
   const script = new Script([
-    { at: 5, run: () => { dodge = true; api.say('Apparently the aliens learned something.'); } },
-    { at: 10, run: () => { rate = 1.8; api.say('And they have been practising.'); } },
-    { at: 15, run: () => { split = true; api.shout('THEY SPLIT NOW'); } },
-    { at: 21, run: () => { homing = true; api.say('They know where you live.'); } },
-    { at: 27, run: () => spawnBoss() },
+    { at: 6, run: () => { dodge = true; api.say('Apparently the aliens learned something.'); } },
+    { at: 12, run: () => { rate = 1.7; api.say('And they have been practising.'); } },
+    { at: 19, run: () => { split = true; api.shout('THEY SPLIT NOW'); } },
+    { at: 26, run: () => { homing = true; api.say('They know where you live.'); } },
+    { at: 32, run: () => { shields = true; api.say('Now with shields. Two hits each.'); } },
+    { at: 38, run: () => spawnBoss() },
   ]);
 
   return {
@@ -103,8 +106,9 @@ export function create1978(api: GameApi): MiniGame {
       }
 
       if (!bossSpawned && aliens.length === 0) {
-        spawnWave(2, 8);
-        api.say('They brought friends.');
+        wave++;
+        spawnWave(2 + Math.min(2, wave), 7 + Math.min(2, wave));
+        api.say(wave === 2 ? 'They brought friends.' : `Wave ${wave}. Nobody is counting but you.`);
       }
 
       // aliens
@@ -113,7 +117,7 @@ export function create1978(api: GameApi): MiniGame {
           a.x += a.vx * dt;
           if (a.x < a.size / 2 || a.x > api.w - a.size / 2) a.vx *= -1;
           a.y = api.h * 0.3 + Math.sin(t * 1.5) * 20 * scale;
-          if (Math.random() < 2.2 * dt) {
+          if (Math.random() < 1.9 * dt) {
             shots.push({ x: a.x + rand(-a.size / 3, a.size / 3), y: a.y + a.size / 2, vy: 300 * scale, from: 'alien' });
           }
           continue;
@@ -132,7 +136,7 @@ export function create1978(api: GameApi): MiniGame {
           );
           if (threat) a.x += Math.sign(a.x - threat.x || 1) * 240 * scale * dt;
         }
-        if (Math.random() < 0.25 * rate * dt) {
+        if (Math.random() < (0.1 + t * 0.008) * rate * dt) {
           shots.push({ x: a.x, y: a.y + a.size / 2, vy: 260 * scale, from: 'alien' });
         }
         if (a.y > api.h - 60 * scale) {
@@ -195,7 +199,11 @@ export function create1978(api: GameApi): MiniGame {
         }
       }
 
-      api.hud(`LIVES ${lives}    KILLS ${kills}`);
+      api.hud(
+        bossSpawned
+          ? `LIVES ${lives}    BOSS ${Math.max(0, aliens[0]?.hp ?? 0)}`
+          : `LIVES ${lives}    WAVE ${wave}/3    KILLS ${kills}`,
+      );
     },
 
     draw() {
@@ -232,7 +240,7 @@ export function create1978(api: GameApi): MiniGame {
       });
 
       text(api, '1978', 18, 24, 16, { align: 'left', kind: 'mono', alpha: 0.5 });
-      timerBar(api, t, 34);
+      timerBar(api, t, 48);
     },
   } satisfies MiniGame;
 }

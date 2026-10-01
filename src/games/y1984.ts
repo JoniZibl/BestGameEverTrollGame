@@ -3,7 +3,8 @@ import { Script, fill, randInt, text, timerBar } from './helpers';
 
 const W = 10;
 const H = 18;
-const ROUND = 27;
+const ROUND = 45;
+const LINE_TARGET = 4;
 
 /** Our own block set. Same idea, different shapes — four of them, all ours. */
 const SHAPES: number[][][] = [
@@ -40,6 +41,7 @@ export function create1984(api: GameApi): MiniGame {
   let fallTimer = 0;
   let moveTimer = 0;
   let topped = false;
+  let done = false;
   const grid: number[][] = Array.from({ length: H }, () => Array(W).fill(0));
   let piece = { m: SHAPES[0], x: 3, y: 0 };
 
@@ -84,6 +86,11 @@ export function create1984(api: GameApi): MiniGame {
     if (cleared) {
       lines += cleared;
       api.audio.jingle([72, 76, 79].slice(0, cleared + 1), 0.06, 'square');
+      if (lines >= LINE_TARGET) {
+        done = true;
+        api.win({ stat: `${lines} LINES AT x${speed}`, score: lines });
+        return;
+      }
     } else {
       api.audio.blip(160, 0.06, 'square', 0.16);
     }
@@ -98,11 +105,12 @@ export function create1984(api: GameApi): MiniGame {
   };
 
   const script = new Script([
-    { at: 8, run: () => bump(2, 'Okay. Maybe we made this too easy.') },
-    { at: 13, run: () => bump(4, 'Still comfortable?') },
-    { at: 18, run: () => bump(8, 'Hm.') },
-    { at: 22, run: () => bump(16, 'Right.') },
-    { at: 24, run: () => api.say('This is roughly level 29. People trained for years.') },
+    { at: 10, run: () => bump(2, 'Okay. Maybe we made this too easy.') },
+    { at: 18, run: () => bump(3, 'Still comfortable?') },
+    { at: 25, run: () => bump(5, 'Hm.') },
+    { at: 31, run: () => bump(8, 'You are doing better than expected.') },
+    { at: 37, run: () => bump(16, 'Right.') },
+    { at: 39, run: () => api.say('This is roughly level 29. People trained for years.') },
   ]);
 
   return {
@@ -112,6 +120,7 @@ export function create1984(api: GameApi): MiniGame {
     },
 
     update(dt) {
+      if (done) return;
       t += dt;
       script.update(t);
 
@@ -148,8 +157,10 @@ export function create1984(api: GameApi): MiniGame {
         else piece.y++;
       }
 
-      api.hud(`LINES ${lines}    SPEED x${speed}    ${Math.max(0, ROUND - t).toFixed(0)}s`);
-      if (t >= ROUND) api.win({ stat: `${lines} LINES AT x${speed}`, score: lines });
+      api.hud(
+        `LINES ${lines}/${LINE_TARGET}    SPEED x${speed}    ${Math.max(0, ROUND - t).toFixed(0)}s`,
+      );
+      if (t >= ROUND) api.lose(`Time ran out on ${lines} line${lines === 1 ? '' : 's'}.`);
     },
 
     draw() {

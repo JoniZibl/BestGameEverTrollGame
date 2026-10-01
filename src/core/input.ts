@@ -120,6 +120,11 @@ export class Input {
       this.pointerEdge
     );
   }
+  /** Fire that ignores the pointer, for games where dragging means "look around". */
+  get actionKeyPressed() {
+    return this.justPressed('Space', 'KeyZ', 'Enter') || this.virtualEdge.has('action');
+  }
+
   get upPressed() {
     return this.justPressed('ArrowUp', 'KeyW', 'Space') || this.virtualEdge.has('up');
   }

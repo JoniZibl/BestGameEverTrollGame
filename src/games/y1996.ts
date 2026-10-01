@@ -63,7 +63,9 @@ export function create1996(api: GameApi): MiniGame {
   let t = 0;
   let taken = 0;
   let quantize = 4;
-  let far = 26;
+  let far = 20;
+  const NEEDED = 5;
+  let dragX: number | null = null;
   let polyLabel = 412;
   let remastered = false;
   const cam = { x: 0, y: 1.6, z: -6, yaw: 0, bob: 0 };
@@ -90,6 +92,8 @@ export function create1996(api: GameApi): MiniGame {
       { x: 8, y: 0, z: 9 },
       { x: -11, y: 0, z: 4 },
       { x: 2, y: 0, z: 18 },
+      { x: -6, y: 0, z: -14 },
+      { x: 17, y: 0, z: -5 },
     ];
     spots.forEach((p) =>
       shapes.push({ pos: p, verts: OCTA.verts, faces: OCTA.faces, scale: 1.1, spin: 1.4, crystal: true }),
@@ -99,6 +103,7 @@ export function create1996(api: GameApi): MiniGame {
   const script = new Script([
     { at: 2, run: () => api.say('LOOK AT THESE GRAPHICS.') },
     { at: 9, run: () => api.say('That fog is not atmosphere. It is hiding the parts we did not draw.') },
+    { at: 30, run: () => api.say('Still looking? The draw distance is not helping, is it.') },
     {
       at: 17,
       run: () => {
@@ -123,6 +128,13 @@ export function create1996(api: GameApi): MiniGame {
       t += dt;
       script.update(t);
       cam.yaw += api.input.axisX * 1.9 * dt;
+      // Drag to look, for anyone without arrow keys to hand.
+      if (api.input.pointerDown) {
+        if (dragX !== null) cam.yaw += (api.input.pointerX - dragX) * 0.006;
+        dragX = api.input.pointerX;
+      } else {
+        dragX = null;
+      }
       const fwd = (api.input.up ? 1 : 0) - (api.input.downKey ? 1 : 0);
       cam.x += Math.sin(cam.yaw) * fwd * 6.5 * dt;
       cam.z += Math.cos(cam.yaw) * fwd * 6.5 * dt;
@@ -137,15 +149,21 @@ export function create1996(api: GameApi): MiniGame {
           s.taken = true;
           taken++;
           api.audio.jingle([76, 83], 0.07, 'triangle');
-          if (taken >= 3) {
+          if (taken >= NEEDED) {
             api.win({ stat: remastered ? 'ALL THREE, REMASTERED' : 'ALL THREE, FOGGED' });
             return;
           }
-          api.say(`${3 - taken} left. Somewhere in the fog.`);
+          api.say(`${NEEDED - taken} left. Somewhere in the fog.`);
         }
       }
 
-      api.hud(`POLYGONS ${polyLabel.toLocaleString()}    CRYSTALS ${taken}/3`);
+      if (t > 75) {
+        api.lose('Lost in the fog. It was doing its job.');
+        return;
+      }
+      api.hud(
+        `POLYGONS ${polyLabel.toLocaleString()}    CRYSTALS ${taken}/${NEEDED}    ${Math.max(0, 75 - t).toFixed(0)}s`,
+      );
     },
 
     draw() {
@@ -154,8 +172,9 @@ export function create1996(api: GameApi): MiniGame {
       const W = api.w;
       const H = api.h;
       const focal = Math.min(W, H) * 0.9;
-      const cos = Math.cos(-cam.yaw);
-      const sin = Math.sin(-cam.yaw);
+      // Camera basis must match the movement basis below: forward = (sin yaw, cos yaw).
+      const cos = Math.cos(cam.yaw);
+      const sin = Math.sin(cam.yaw);
 
       const project = (p: V3) => {
         const dx = p.x - cam.x;

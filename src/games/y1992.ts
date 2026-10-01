@@ -41,8 +41,8 @@ export function create1992(api: GameApi): MiniGame {
     banner = `ROUND ${n}`;
     you.x = 0.3;
     foe.x = 0.7;
-    you.hp = you.maxHp = n === 1 ? 100 : 130;
-    foe.hp = foe.maxHp = n === 1 ? 1 : 100;
+    you.hp = you.maxHp = n === 1 ? 100 : n === 2 ? 130 : 150;
+    foe.hp = foe.maxHp = n === 1 ? 1 : n === 2 ? 100 : 190;
     foe.down = 0;
     you.down = 0;
     api.audio.jingle(n === 1 ? [60, 64, 67] : [48, 50, 51, 52], 0.1, 'sawtooth');
@@ -72,7 +72,7 @@ export function create1992(api: GameApi): MiniGame {
       }
 
       if (phase === 'between') {
-        if (phaseT > 2.4) startRound(2);
+        if (phaseT > 2.4) startRound(round + 1);
         return;
       }
       if (phase === 'done') return;
@@ -88,21 +88,25 @@ export function create1992(api: GameApi): MiniGame {
           you.recover = 0.3;
           api.audio.blip(300, 0.05, 'square', 0.14, 500);
           if (Math.abs(you.x - foe.x) < 0.17 && !foe.down) {
-            hit(foe, round === 1 ? 5 : 11, 1);
+            hit(foe, round === 1 ? 5 : round === 2 ? 11 : 9, 1);
             if (foe.hp <= 0) {
               foe.down = 0.01;
+              banner = 'K.O.';
               if (round === 1) {
                 phase = 'between';
                 phaseT = 0;
-                banner = 'K.O.';
                 api.say("Balancing hadn't been invented yet.");
                 api.audio.jingle([72, 67, 60], 0.12, 'sawtooth');
+              } else if (round === 2) {
+                phase = 'between';
+                phaseT = 0;
+                api.say('Round three. They brought a bigger one.');
+                api.audio.jingle([60, 59, 57, 55], 0.12, 'sawtooth');
               } else {
                 phase = 'done';
-                banner = 'K.O.';
                 api.audio.fanfare();
                 window.setTimeout(
-                  () => api.win({ stat: `ROUND 2 WON WITH ${Math.round(you.hp)} HP` }),
+                  () => api.win({ stat: `THREE ROUNDS, ${Math.round(you.hp)} HP LEFT` }),
                   1100,
                 );
               }
@@ -118,19 +122,20 @@ export function create1992(api: GameApi): MiniGame {
       foe.windup = Math.max(0, foe.windup - dt);
       if (foe.down) {
         foe.down += dt;
-      } else if (round === 2) {
+      } else if (round >= 2) {
         const gap = you.x - foe.x;
         const dir = Math.sign(gap) || 1;
+        const speed = round === 2 ? 0.42 : 0.3;
         if (Math.abs(gap) > 0.14) {
-          foe.x = clamp(foe.x + dir * 0.42 * dt, 0.08, 0.92);
+          foe.x = clamp(foe.x + dir * speed * dt, 0.08, 0.92);
         } else if (!foe.recover && !foe.windup && foe.attack <= 0) {
-          foe.windup = 0.34;
+          foe.windup = round === 2 ? 0.34 : 0.5;
         }
         if (foe.windup > 0 && foe.windup < 0.02) {
           foe.attack = 0.16;
           foe.recover = 0.5;
-          if (Math.abs(you.x - foe.x) < 0.19) {
-            hit(you, 9, -1);
+          if (Math.abs(you.x - foe.x) < (round === 3 ? 0.26 : 0.19)) {
+            hit(you, round === 3 ? 17 : 9, -1);
             if (you.hp <= 0) {
               phase = 'done';
               banner = 'K.O.';
@@ -141,12 +146,11 @@ export function create1992(api: GameApi): MiniGame {
         foe.facing = -dir;
       }
 
-      if (round === 2 && t > 55) {
-        phase = 'done';
-        window.setTimeout(() => api.win({ stat: 'SURVIVED ROUND 2' }), 400);
-      }
-
-      api.hud(round === 1 ? 'ROUND 1' : `ROUND 2    YOU ${Math.round(you.hp)}    THEM ${Math.round(foe.hp)}`);
+      api.hud(
+        round === 1
+          ? 'ROUND 1'
+          : `ROUND ${round}    YOU ${Math.round(you.hp)}    THEM ${Math.round(foe.hp)}`,
+      );
     },
 
     draw() {
@@ -170,6 +174,8 @@ export function create1992(api: GameApi): MiniGame {
         if (f.down) ctx.rotate((Math.min(1, f.down * 3) * Math.PI) / 2 * f.facing * -1);
         ctx.globalAlpha = f.hurt > 0 && Math.floor(f.hurt * 40) % 2 ? 0.35 : 1;
         ctx.fillStyle = color;
+        const big = f === foe && round === 3 ? 1.5 : 1;
+        ctx.scale(big, big);
         ctx.fillRect(-14 * s, -96 * s, 28 * s, 60 * s); // torso
         ctx.fillRect(-11 * s, -124 * s, 22 * s, 26 * s); // head
         ctx.fillRect(-12 * s, -36 * s, 10 * s, 36 * s); // legs

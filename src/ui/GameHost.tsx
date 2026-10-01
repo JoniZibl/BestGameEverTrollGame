@@ -159,7 +159,7 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
   return (
     <div className="host">
       <div className="hud-line">{hud}</div>
-      <div className="stage" ref={wrapRef}>
+      <div className="stage" data-era={era.theme} ref={wrapRef}>
         {era.play.kind === 'canvas' ? (
           <canvas ref={canvasRef} className="game-canvas" />
         ) : (
