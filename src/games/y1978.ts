@@ -136,7 +136,11 @@ export function create1978(api: GameApi): MiniGame {
           );
           if (threat) a.x += Math.sign(a.x - threat.x || 1) * 240 * scale * dt;
         }
-        if (Math.random() < (0.1 + t * 0.008) * rate * dt) {
+        // Arcade rule: only so many enemy bullets may exist at once, so the opening
+        // is readable and the pressure comes from the clock instead of the volume.
+        const incoming = shots.filter((s) => s.from === 'alien').length;
+        const cap = 3 + Math.floor(t / 9);
+        if (incoming < cap && Math.random() < (0.06 + t * 0.006) * rate * dt) {
           shots.push({ x: a.x, y: a.y + a.size / 2, vy: 260 * scale, from: 'alien' });
         }
         if (a.y > api.h - 60 * scale) {

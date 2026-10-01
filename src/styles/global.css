@@ -246,9 +246,13 @@ p {
   justify-content: center;
 }
 
+.brief-screen .giant {
+  font-size: clamp(1.8rem, min(9vw, 7vh), 4rem);
+}
 .title-screen .giant,
 .confirm-screen .giant {
-  font-size: clamp(2.6rem, 11.5vw, 5.2rem);
+  /* vh-aware: a short desktop window must not turn the title into a scroller */
+  font-size: clamp(1.9rem, min(11.5vw, 7.4vh), 5.2rem);
   line-height: 0.9;
 }
 
@@ -493,14 +497,17 @@ p {
 
 .caption {
   position: absolute;
-  top: 6%;
+  /* clear of anything a game draws along its top edge, e.g. the 1972 paddle */
+  top: 13%;
   left: 50%;
   transform: translateX(-50%);
   max-width: min(90%, 720px);
   text-align: center;
   font-size: clamp(0.95rem, 2.6vw, 1.5rem);
   font-weight: 300;
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  /* Opaque, so a ball passing behind it reads as "behind a card", not as a collision. */
+  background: var(--bg);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px color-mix(in srgb, var(--fg) 18%, transparent);
   padding: 0.5em 1em;
   border-radius: var(--radius);
   animation: fadein 260ms ease;
@@ -599,23 +606,45 @@ p {
   opacity: 0.6;
 }
 
-/* ---------- result ---------- */
+/* ---------- result: one card at a time, never a scrollbar ---------- */
 
 .result-screen {
+  justify-content: center;
   align-items: flex-start;
   max-width: 820px;
   width: 100%;
   margin: 0 auto;
 }
+
+.card-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(8px, 2vh, 18px);
+  width: 100%;
+  max-width: 44rem;
+  animation: cardin 340ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes cardin {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
 .result-kicker {
   font-family: var(--mono);
-  letter-spacing: 0.4em;
-  font-size: clamp(0.8rem, 2.4vw, 1.1rem);
+  letter-spacing: 0.35em;
+  font-size: clamp(0.78rem, 2.4vw, 1.05rem);
   opacity: 0.6;
 }
 .result-screen .giant {
-  font-size: clamp(3.4rem, 16vw, 8rem);
+  font-size: clamp(3rem, min(15vw, 14vh), 7rem);
   line-height: 0.85;
+}
+.result-screen .small-giant {
+  font-size: clamp(2.2rem, min(11vw, 9vh), 4.6rem);
 }
 .result-title {
   font-size: clamp(1.1rem, 3.6vw, 1.8rem);
@@ -625,41 +654,69 @@ p {
   font-family: var(--mono);
   letter-spacing: 0.2em;
   color: var(--accent);
-  font-size: 1.1rem;
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
 }
-.fact {
-  font-size: clamp(1rem, 2.6vw, 1.25rem);
-  max-width: 62ch;
-  border-left: var(--border) solid var(--accent);
-  padding-left: 16px;
+.result-missed {
+  font-size: 0.95rem;
+  opacity: 0.7;
+  max-width: 42ch;
 }
 
-.deep-dive {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: clamp(14px, 3vw, 22px);
-  background: var(--panel);
-  border-radius: var(--radius);
-  max-width: 70ch;
+.fact-head {
+  font-size: clamp(1.1rem, 4vw, 1.7rem);
+  opacity: 0.65;
 }
-.deep-dive div {
-  display: grid;
-  grid-template-columns: minmax(110px, 160px) 1fr;
-  gap: 12px;
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  max-width: 46ch;
+  border-left: var(--border) solid var(--accent);
+  padding-left: 16px;
+  font-size: clamp(1rem, min(3vw, 2.5vh), 1.28rem);
 }
-.deep-dive dt {
-  font-family: var(--display);
-  text-transform: uppercase;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  opacity: 0.6;
-  padding-top: 3px;
+.fact p {
+  opacity: 0;
+  animation: factin 520ms ease forwards;
 }
-.deep-dive dd {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 300;
+
+@keyframes factin {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.dive-label {
+  font-size: clamp(1.3rem, 5.5vw, 2.2rem);
+}
+.dive-body {
+  font-size: clamp(1rem, min(3vw, 2.5vh), 1.25rem);
+  max-width: 44ch;
+}
+.dive-dots {
+  display: flex;
+  gap: 7px;
+}
+.dive-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 24%, transparent);
+}
+.dive-dots i.on {
+  background: var(--accent);
+}
+.step-actions {
+  display: flex;
+  gap: clamp(10px, 2vw, 18px);
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 4px;
 }
 
 /* ---------- ending ---------- */
@@ -668,6 +725,10 @@ p {
   max-width: 880px;
   width: 100%;
   margin: 0 auto;
+  justify-content: center;
+}
+.ending-screen .giant {
+  font-size: clamp(2.4rem, min(12vw, 11vh), 5.4rem);
 }
 .ending-sub {
   font-family: var(--mono);
@@ -701,17 +762,17 @@ p {
 
 .achievements ul {
   list-style: none;
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
 }
 .achievements li {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
+  gap: 1px;
+  padding: 8px 10px;
   background: var(--panel);
   border-radius: var(--radius);
   font-size: 0.85rem;

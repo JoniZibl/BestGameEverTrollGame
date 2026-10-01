@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../core/state';
 import { ACHIEVEMENTS } from '../core/achievements';
 import { ERAS } from '../games/registry';
@@ -44,6 +44,8 @@ function AutoPong() {
 
 export function EndingScreen() {
   const { progress, go, reset, fragmentCount, totalFragments } = useGame();
+  const [step, setStep] = useState<'machine' | 'future' | 'record'>('machine');
+  const [confirmWipe, setConfirmWipe] = useState(false);
 
   useEffect(() => {
     audio.setEra('modern');
@@ -54,23 +56,39 @@ export function EndingScreen() {
 
   return (
     <div className="screen ending-screen">
-      <h1 className="giant">
-        THE MACHINE
-        <br />
-        IS FIXED.
-      </h1>
-      <p className="ending-sub">
-        {fragmentCount} of {totalFragments} fragments recovered. {won} of {ERAS.length} years survived
-        properly.
-      </p>
+      {step === 'machine' && (
+        <div className="card-step" key="machine">
+          <h1 className="giant">
+            THE MACHINE
+            <br />
+            IS FIXED.
+          </h1>
+          <p className="ending-sub">
+            {fragmentCount} of {totalFragments} fragments recovered. {won} of {ERAS.length} years won
+            outright.
+          </p>
+          <button className="btn huge" onClick={() => setStep('future')}>
+            CONTINUE
+          </button>
+        </div>
+      )}
 
-      <div className="future-box">
-        <div className="future-year">2031</div>
-        <AutoPong />
-        <p>The game plays itself now. It is very good at it.</p>
-        <p className="muted">Sixty-nine years of progress, and we are back to two rectangles.</p>
-      </div>
+      {step === 'future' && (
+        <div className="card-step" key="future">
+          <div className="future-box">
+            <div className="future-year">2031</div>
+            <AutoPong />
+            <p>The game plays itself now. It is very good at it.</p>
+            <p className="muted">Sixty-nine years of progress, and we are back to two rectangles.</p>
+          </div>
+          <button className="btn huge" onClick={() => setStep('record')}>
+            CONTINUE
+          </button>
+        </div>
+      )}
 
+      {step === 'record' && (
+      <>
       <section className="achievements">
         <h3>ACHIEVEMENTS</h3>
         <ul>
@@ -90,15 +108,23 @@ export function EndingScreen() {
         <button className="btn huge" onClick={() => go('machine')}>
           BACK TO THE TIMELINE
         </button>
-        <button
-          className="btn ghost"
-          onClick={() => {
-            if (confirm('Wipe all progress and start from 1962?')) reset();
-          }}
-        >
-          ERASE THE TIMELINE
-        </button>
+        {confirmWipe ? (
+          <>
+            <button className="btn" onClick={reset}>
+              YES, ERASE IT
+            </button>
+            <button className="btn ghost" onClick={() => setConfirmWipe(false)}>
+              KEEP IT
+            </button>
+          </>
+        ) : (
+          <button className="btn ghost" onClick={() => setConfirmWipe(true)}>
+            ERASE THE TIMELINE
+          </button>
+        )}
       </div>
+      </>
+      )}
     </div>
   );
 }

@@ -227,12 +227,13 @@ export function create1972(api: GameApi): MiniGame {
       const { ctx } = api;
       fill(api);
 
-      text(api, 'PONG', api.w / 2, api.h * 0.46, Math.min(api.w / 4.4, api.h / 7), {
-        alpha: titleFade,
-      });
-      text(api, '1972', api.w / 2, api.h * 0.52, Math.min(api.w / 9, api.h / 16), {
-        alpha: titleFade,
-      });
+      // Size the wordmark first, then hang the year off its baseline, so the two
+      // can never collide on a narrow or a short stage.
+      const titleSize = Math.min(api.w / 4.4, api.h / 7);
+      const yearSize = titleSize * 0.4;
+      const titleY = api.h * 0.44;
+      text(api, 'PONG', api.w / 2, titleY, titleSize, { alpha: titleFade });
+      text(api, '1972', api.w / 2, titleY + titleSize * 0.76, yearSize, { alpha: titleFade });
 
       ctx.save();
       ctx.translate(api.w / 2, api.h / 2);

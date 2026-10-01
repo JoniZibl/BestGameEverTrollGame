@@ -121,7 +121,7 @@
 /* The caption / shout overlays sit inside the stage, so they follow the era too. */
 .stage[data-era] .caption {
   color: var(--fg);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  background: var(--bg);
 }
 .stage[data-era] .shout {
   color: var(--fg);
