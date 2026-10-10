@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGame } from './core/state';
 import { TitleScreen } from './ui/TitleScreen';
 import { ConfirmScreen } from './ui/ConfirmScreen';
@@ -27,6 +27,17 @@ export default function App() {
   useEffect(() => {
     if (allErasDone) grant('historian');
   }, [allErasDone, grant]);
+
+  // Sound is off by default, so mention once that there is any.
+  const soundHinted = useRef(false);
+  useEffect(() => {
+    if (screen !== 'machine' || !progress.muted || soundHinted.current) return;
+    soundHinted.current = true;
+    window.setTimeout(
+      () => note('SOUND IS OFF', 'There is a soundtrack, and it ages too. Top right.'),
+      900,
+    );
+  }, [screen, progress.muted, note]);
 
   // "Nice monitor."
   useEffect(() => {

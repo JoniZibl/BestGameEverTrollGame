@@ -36,7 +36,7 @@ export const emptyProgress = (): Progress => ({
   noCount: 0,
   yearClicks: 0,
   deepDives: [],
-  muted: false,
+  muted: true,
   lastEraPlayed: null,
 });
 

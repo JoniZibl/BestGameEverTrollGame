@@ -21,8 +21,7 @@ export function DifficultyScreen() {
             <button
               className={`diff-option${difficulty === d.id ? ' on' : ''}`}
               onClick={() => {
-                audio.unlock();
-                audio.startMusic();
+                audio.enable();
                 audio.blip(520 + DIFFICULTIES.indexOf(d) * 120, 0.1, 'square', 0.2, 900);
                 setDifficulty(d.id);
                 go(returning ? 'machine' : 'intro');

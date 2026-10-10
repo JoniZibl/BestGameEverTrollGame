@@ -24,7 +24,7 @@ export function TopBar() {
       <div className="topbar-right">
         {era && screen === 'play' ? <span className="topbar-era">{era.label}</span> : null}
         <button className="topbar-mute" onClick={toggleMute} aria-label="toggle sound">
-          {progress.muted ? 'SOUND OFF' : 'SOUND ON'}
+          {progress.muted ? 'SOUND: OFF' : 'SOUND: ON'}
         </button>
       </div>
     </header>

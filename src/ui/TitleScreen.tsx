@@ -7,8 +7,7 @@ export function TitleScreen() {
   const [teased, setTeased] = useState(false);
 
   const start = () => {
-    audio.unlock();
-    audio.startMusic();
+    audio.enable();
     audio.setEra('oscilloscope');
     audio.blip(440, 0.12, 'square', 0.25, 880);
     grant('first-jump');
@@ -37,7 +36,7 @@ export function TitleScreen() {
           PLAY
         </button>
         {progress.fragments.length > 0 && (
-          <button className="btn ghost" onClick={() => { audio.unlock(); audio.startMusic(); go('machine'); }}>
+          <button className="btn ghost" onClick={() => { audio.enable(); go('machine'); }}>
             CONTINUE · {progress.fragments.length} FRAGMENTS
           </button>
         )}

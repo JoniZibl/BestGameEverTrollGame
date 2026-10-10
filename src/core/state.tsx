@@ -170,6 +170,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const toggleMute = useCallback(() => {
     const muted = audio.toggleMute();
+    // Turning it on happens inside a click, which is the only moment the browser
+    // lets us start audio at all.
+    if (!muted) audio.enable();
     progressRef.current = { ...progressRef.current, muted };
     setProgress(progressRef.current);
     if (muted) {

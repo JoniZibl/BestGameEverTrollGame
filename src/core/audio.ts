@@ -129,11 +129,27 @@ export class AudioEngine {
   private nextTime = 0;
   private era: ThemeId = 'oscilloscope';
   private playing = false;
+  /** The player has explicitly asked for sound. Nothing is created before that. */
+  private wanted = false;
   private listeners: MuteListener[] = [];
   muted = false;
 
-  /** Must run inside a user gesture. */
+  /**
+   * Turns sound on. Must be called from a user gesture — this is the only path
+   * that is allowed to create an AudioContext, so a page that nobody has asked
+   * for sound from stays genuinely silent instead of queueing noise for the
+   * first tap.
+   */
+  enable() {
+    if (this.muted) return;
+    this.wanted = true;
+    this.unlock();
+    this.startMusic();
+  }
+
+  /** Must run inside a user gesture, and only when sound is actually wanted. */
   unlock() {
+    if (this.muted) return;
     if (this.ctx) {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
       return;
@@ -171,6 +187,7 @@ export class AudioEngine {
 
   setMuted(m: boolean) {
     this.muted = m;
+    if (m) this.stopMusic();
     if (this.master && this.ctx) {
       this.master.gain.setTargetAtTime(m ? 0 : 0.5, this.ctx.currentTime, 0.02);
     }
@@ -182,7 +199,7 @@ export class AudioEngine {
     return this.muted;
   }
 
-  /** Cross-fades into the given era's soundtrack. */
+  /** Cross-fades into the given era's soundtrack. Never starts sound by itself. */
   setEra(era: ThemeId) {
     if (this.era === era && this.playing) return;
     this.era = era;
@@ -192,10 +209,11 @@ export class AudioEngine {
       this.verbGain.gain.setTargetAtTime(cfg.reverb ?? 0, this.ctx.currentTime, 0.4);
     }
     if (this.playing) return;
-    this.startMusic();
+    if (this.wanted && !this.muted) this.startMusic();
   }
 
   startMusic() {
+    if (this.muted || !this.wanted) return;
     this.unlock();
     if (!this.ctx || this.playing) return;
     this.playing = true;
@@ -252,7 +270,7 @@ export class AudioEngine {
   /** One-shot tone. Everything from a 1972 paddle tick to a 2026 UI chime. */
   blip(freq: number, dur = 0.08, wave: OscillatorType = 'square', vol = 0.3, slideTo?: number) {
     const ctx = this.ctx;
-    if (!ctx || !this.sfxGain) return;
+    if (this.muted || !ctx || !this.sfxGain) return;
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     osc.type = wave;
@@ -270,7 +288,7 @@ export class AudioEngine {
 
   noise(dur = 0.2, vol = 0.25, cutoff = 1200) {
     const ctx = this.ctx;
-    if (!ctx || !this.sfxGain) return;
+    if (this.muted || !ctx || !this.sfxGain) return;
     const len = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const data = buf.getChannelData(0);
@@ -290,6 +308,7 @@ export class AudioEngine {
 
   /** Little melodic stingers reused across eras. */
   jingle(notes: number[], gap = 0.09, wave: OscillatorType = 'square') {
+    if (this.muted || !this.ctx) return;
     notes.forEach((n, i) => {
       window.setTimeout(() => this.blip(midi(n), gap * 1.6, wave, 0.26), i * gap * 1000);
     });

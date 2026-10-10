@@ -55,6 +55,18 @@ npm run preview
 
 No backend. Progress lives in `localStorage`.
 
+## Sound
+
+**Off by default.** A website that makes noise at someone who did not ask for it
+is a website that gets closed, and a phone's silent switch does not reach Web
+Audio, so the page has to be the one with manners. Nothing is created — not even
+an AudioContext — until the sound toggle is pressed, and every tone, jingle and
+noise burst is a no-op while it is off. The toggle sits top right and says what
+it is (`SOUND: OFF`), not what it would do.
+
+The first time you reach the timeline, the game mentions once that a soundtrack
+exists. After that it keeps quiet about it.
+
 ## Controls
 
 Keyboard and mouse on desktop (arrows / WASD, space, click). On a phone, **one
