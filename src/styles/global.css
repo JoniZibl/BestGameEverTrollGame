@@ -969,3 +969,24 @@ p {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* ---------- overtime ---------- */
+
+.hud-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.overtime {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.overtime b {
+  color: var(--accent);
+}

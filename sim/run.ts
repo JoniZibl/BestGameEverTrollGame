@@ -32,12 +32,14 @@ for (const g of games) {
   for (const d of DIFFS) {
     const r = runs(5, () => {
       (g as { reset?: () => void }).reset?.();
-      return simulate(g.create, g.bot, { difficulty: d, maxSeconds: 150 });
+      return simulate(g.create, g.bot, { difficulty: d, maxSeconds: 150, stopOnWin: false });
     });
     const first = r.samples[0];
+    const securedCount = r.samples.filter((x) => x.securedAt !== undefined).length;
     console.log(
-      `${g.name.padEnd(14)} ${d.padEnd(8)} win ${r.win}/5  lose ${r.lose}  timeout ${r.timeout}` +
-        `   e.g. ${first.outcome} @${first.seconds.toFixed(0)}s ${first.reason ?? first.stat ?? ''} | ${first.hud}`,
+      `${g.name.padEnd(14)} ${d.padEnd(8)} secured ${securedCount}/5  ended ${r.lose + r.win}/5` +
+        `   e.g. goal @${first.securedAt?.toFixed(0) ?? '--'}s, run ended @${first.seconds.toFixed(0)}s` +
+        ` (${first.reason ?? first.outcome})`,
     );
   }
 }

@@ -34,6 +34,7 @@ export const ERAS: Era[] = [
     goal: 'Hit the rival ship before the night shift wants the computer back.',
     theme: 'oscilloscope',
     duration: 60,
+    endless: 'rounds',
     fact: 'Spacewar! was written in 1962 by students at MIT on a PDP-1, a machine that cost roughly $120,000. It was never sold. It was copied, by hand, onto every PDP-1 anyone could reach.',
     deepDive: {
       developer: 'Steve Russell and the MIT Tech Model Railroad Club',
@@ -56,6 +57,7 @@ export const ERAS: Era[] = [
     goal: 'Survive the round. Mind your lives.',
     theme: 'arcade',
     duration: 46,
+    endless: 'continue',
     fact: 'Pong was one of the first commercially successful arcade games. Its takings turned video games from a laboratory curiosity into an industry with cabinets, routes and competitors.',
     deepDive: {
       developer: 'Atari (Allan Alcorn, as a training exercise)',
@@ -78,6 +80,7 @@ export const ERAS: Era[] = [
     goal: 'Clear the waves, then whatever arrives after them.',
     theme: 'arcade',
     duration: 48,
+    endless: 'rounds',
     fact: 'Space Invaders sped up as you cleared it — not by design, but because the hardware could redraw fewer aliens faster. The accident became the template for arcade difficulty.',
     deepDive: {
       developer: 'Taito, designed by Tomohiro Nishikado',
@@ -100,6 +103,7 @@ export const ERAS: Era[] = [
     goal: 'Eat your fill. Then catch all three ghosts.',
     theme: 'arcade',
     duration: 55,
+    endless: 'rounds',
     fact: 'Pac-Man gave each ghost its own chase rule rather than one shared behaviour, so the maze felt like it was being hunted by four personalities instead of four copies.',
     deepDive: {
       developer: 'Namco, designed by Toru Iwatani',
@@ -122,6 +126,7 @@ export const ERAS: Era[] = [
     goal: 'Climb five girders without meeting a barrel.',
     theme: 'arcade',
     duration: 45,
+    endless: 'rounds',
     fact: 'Donkey Kong gave arcade games a story: a villain, a victim and a climb. It also gave a struggling company its future, and a carpenter his career.',
     deepDive: {
       developer: 'Nintendo, designed by Shigeru Miyamoto',
@@ -144,6 +149,7 @@ export const ERAS: Era[] = [
     goal: 'Clear your lines before the speed clears you.',
     theme: 'bit8',
     duration: 45,
+    endless: 'continue',
     fact: 'Tetris was written in 1984 by Alexey Pajitnov on a Soviet Electronika 60, a machine with no graphics — the first version drew its blocks out of text characters.',
     deepDive: {
       developer: 'Alexey Pajitnov at the Soviet Academy of Sciences',
@@ -166,6 +172,7 @@ export const ERAS: Era[] = [
     goal: 'Reach the flag. It is further than it looks.',
     theme: 'bit8',
     duration: 60,
+    endless: 'rounds',
     fact: 'Super Mario Bros. teaches you to run, jump and fear a gap in its first few seconds, without a single line of instruction. The opening screen is a tutorial pretending to be scenery.',
     deepDive: {
       developer: 'Nintendo, designed by Shigeru Miyamoto and Takashi Tezuka',
@@ -188,6 +195,7 @@ export const ERAS: Era[] = [
     goal: 'Reach the end. Keep at least one ring.',
     theme: 'bit16',
     duration: 45,
+    endless: 'rounds',
     fact: 'Sonic existed to be the thing the other mascot was not: fast, impatient, and bundled with the console. Speed was a marketing position before it was a mechanic.',
     deepDive: {
       developer: 'Sega, Sonic Team',
@@ -210,6 +218,7 @@ export const ERAS: Era[] = [
     goal: 'Win three rounds. Round one does not count for much.',
     theme: 'bit16',
     duration: 60,
+    endless: 'rounds',
     fact: 'Street Fighter II turned the arcade into a competitive venue. Its combo system was a bug: an animation window that let a second hit land before the opponent could recover.',
     deepDive: {
       developer: 'Capcom',
@@ -232,6 +241,7 @@ export const ERAS: Era[] = [
     goal: 'Clear the corridor before it clears you.',
     theme: 'bit16',
     duration: 50,
+    endless: 'rounds',
     fact: 'Doom looked three-dimensional but could not stack one room above another. Its world was flat geometry with heights — enough of an illusion that nobody minded for years.',
     deepDive: {
       developer: 'id Software',
@@ -254,6 +264,7 @@ export const ERAS: Era[] = [
     goal: 'Survive the random encounters.',
     theme: 'bit16',
     duration: 55,
+    endless: 'rounds',
     fact: 'Japanese role-playing games turned fighting into a conversation with a menu. The Active Time Battle bar added pressure to that conversation, and an entire decade of games copied it.',
     deepDive: {
       developer: 'Square, Enix and the studios that followed them',
@@ -276,6 +287,7 @@ export const ERAS: Era[] = [
     goal: 'Find every crystal in the fog.',
     theme: 'early3d',
     duration: 45,
+    endless: 'rounds',
     fact: 'Early 3D consoles hid their draw distance behind fog, because the alternative was watching the world appear out of nothing a few metres in front of you.',
     deepDive: {
       developer: 'Nintendo, Sony, Sega and everyone else, simultaneously',
@@ -298,6 +310,7 @@ export const ERAS: Era[] = [
     goal: 'Eat your pellets without eating yourself.',
     theme: 'lcd',
     duration: 45,
+    endless: 'continue',
     fact: 'Nokia put Snake on the 6110 in 1997. It was the first game hundreds of millions of people carried everywhere, years before anyone said the word "smartphone".',
     deepDive: {
       developer: 'Taneli Arm\u00e4nto, at Nokia',
@@ -320,6 +333,7 @@ export const ERAS: Era[] = [
     goal: 'Land your hits through 420 milliseconds of lag.',
     theme: 'web2',
     duration: 40,
+    endless: 'once',
     fact: 'Playing online meant occupying the household telephone line. A 56k modem negotiated its speed out loud, and anyone picking up the handset ended the match.',
     deepDive: {
       developer: 'Everyone, over dial-up',
@@ -342,6 +356,7 @@ export const ERAS: Era[] = [
     goal: 'Keep every bar above zero until the day ends.',
     theme: 'web2',
     duration: 50,
+    endless: 'continue',
     fact: 'The Sims became the best-selling PC game of its time by removing the win condition. There is no score, no enemy, and no ending \u2014 just needs, and a house.',
     deepDive: {
       developer: 'Maxis, designed by Will Wright',
@@ -364,6 +379,7 @@ export const ERAS: Era[] = [
     goal: 'Finish the quest. Or make the correct decision.',
     theme: 'web2',
     duration: 45,
+    endless: 'once',
     fact: 'World of Warcraft reached roughly 12 million subscribers. The quest structure that drew people in — collect, return, repeat — was also the thing most of them eventually described as a job.',
     deepDive: {
       developer: 'Blizzard Entertainment',
@@ -386,6 +402,7 @@ export const ERAS: Era[] = [
     goal: 'Knock down all three targets before the shots run out.',
     theme: 'flat',
     duration: 45,
+    endless: 'rounds',
     fact: 'Angry Birds cost about a hundred thousand euros to make, sold for less than a coffee, and was downloaded a billion times. It is the moment the phone became the biggest games platform there is.',
     deepDive: {
       developer: 'Rovio, a Finnish studio on its fifty-second game',
@@ -408,6 +425,7 @@ export const ERAS: Era[] = [
     goal: 'Build a wall and survive the night.',
     theme: 'flat',
     duration: 50,
+    endless: 'rounds',
     fact: 'Minecraft sold for years while unfinished, had no goals and no tutorial, and became the best-selling game ever made. Its first version was written in about a week.',
     deepDive: {
       developer: 'Markus Persson, then Mojang',
@@ -430,6 +448,7 @@ export const ERAS: Era[] = [
     goal: 'Pass the pipes. Buying things is optional.',
     theme: 'flat',
     duration: 45,
+    endless: 'continue',
     fact: 'Flappy Bird was made in a few days, earned a reported fifty thousand dollars a day from adverts, and was then deleted by its own author, who said it had become too addictive.',
     deepDive: {
       developer: 'Dong Nguyen, alone, in Hanoi',
@@ -452,6 +471,7 @@ export const ERAS: Era[] = [
     goal: 'Catch them all. The servers permitting.',
     theme: 'flat',
     duration: 40,
+    endless: 'continue',
     fact: 'Pok\u00e9mon GO put a twenty-year-old collecting game on top of a map of the real world, and within a week had people walking into parks, each other, and occasionally the sea.',
     deepDive: {
       developer: 'Niantic with The Pok\u00e9mon Company',
@@ -474,6 +494,7 @@ export const ERAS: Era[] = [
     goal: 'Be the last one standing. Try not to help.',
     theme: 'modern',
     duration: 35,
+    endless: 'rounds',
     fact: 'Battle royale came out of mod culture — community-made rulesets for existing games — before anyone built a standalone one. Within a year it was the shape of the biggest game in the world.',
     deepDive: {
       developer: 'Brendan Greene, then PUBG Corporation and Epic Games',
@@ -496,6 +517,7 @@ export const ERAS: Era[] = [
     goal: 'Get to the gameplay. It is one button.',
     theme: 'modern',
     duration: 45,
+    endless: 'once',
     fact: 'A modern blockbuster credits thousands of people across several countries, ships a day-one patch larger than every game on this timeline combined, and still has to compile its shaders on your machine before you can move.',
     deepDive: {
       developer: 'Several studios, several continents, several years',

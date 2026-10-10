@@ -10,6 +10,8 @@ import { tuning, type DifficultyId } from '../src/core/difficulty';
 
 export interface SimResult {
   outcome: 'win' | 'lose' | 'timeout';
+  /** When the goal was first met, even if play carried on afterwards. */
+  securedAt?: number;
   reason?: string;
   stat?: string;
   seconds: number;
@@ -211,7 +213,15 @@ class FakeClock {
 export function simulate(
   create: (api: GameApi) => MiniGame,
   bot: Bot,
-  opts: { difficulty?: DifficultyId; w?: number; h?: number; maxSeconds?: number; dt?: number } = {},
+  opts: {
+    difficulty?: DifficultyId;
+    w?: number;
+    h?: number;
+    maxSeconds?: number;
+    dt?: number;
+    /** false keeps playing after the goal, the way overtime does. */
+    stopOnWin?: boolean;
+  } = {},
 ): SimResult {
   const w = opts.w ?? 420;
   const h = opts.h ?? 760;
@@ -220,6 +230,7 @@ export function simulate(
   const input = new FakeInput();
   const rec = new Recorder();
   let done: SimResult | null = null;
+  let secured: number | undefined;
   let hud = '';
   let t = 0;
 
@@ -256,10 +267,22 @@ export function simulate(
     // until the simulation loop finished, which looks exactly like a frozen game.
     popup: (req: PopupRequest) => req.onPick(req.buttons[0].value),
     win: (p?: WinPayload) => {
-      if (!done) done = { outcome: 'win', stat: p?.stat, seconds: t, hud };
+      // Mirror the host: the first win secures the year, play continues.
+      if (secured === undefined) secured = t;
+      if (!done && opts.stopOnWin !== false) {
+        done = { outcome: 'win', stat: p?.stat, seconds: t, securedAt: secured, hud };
+      }
     },
     lose: (reason?: string) => {
-      if (!done) done = { outcome: 'lose', reason, seconds: t, hud };
+      if (!done) {
+        done = {
+          outcome: secured !== undefined ? 'win' : 'lose',
+          reason,
+          seconds: t,
+          securedAt: secured,
+          hud,
+        };
+      }
     },
   };
 
@@ -277,7 +300,7 @@ export function simulate(
     t += dt;
     clock.advance(t);
   }
-  return done ?? { outcome: 'timeout', seconds: t, hud };
+  return done ?? { outcome: 'timeout', seconds: t, securedAt: secured, hud };
 }
 
 export function runs(

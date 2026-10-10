@@ -118,6 +118,25 @@ const script = new Script([
 ]);
 ```
 
+## Overtime: the goal is not the end
+
+Meeting a year's goal secures it — the fragment is banked and the next year opens
+the moment you get there. The game does not stop. It says YEAR SECURED and keeps
+going until you actually fail, and the result card reports how far past the goal
+you got.
+
+How a year carries on depends on what it is, set per era as `endless`:
+
+- `continue` — it already keeps going by itself. Tetris keeps stacking, the snake
+  keeps growing, Pong keeps serving, the needs in 2001 keep draining.
+- `rounds` — the year restarts, harder each time: faster, greedier, less time.
+  The badge counts them (`OVERTIME · ROUND 2`).
+- `once` — a set piece with nothing to survive (2000, 2004, the 2020s). These end
+  at the goal, because there is nothing there to fail at.
+
+**BANK IT & STOP** in the header ends the run and keeps everything earned, so
+walking away after securing a year never costs the fragment.
+
 ## Difficulty, and what winning is for
 
 Pick one of three settings before you start, and change it from the timeline whenever

@@ -70,6 +70,24 @@ export interface Tuning {
   readonly isHard: boolean;
 }
 
+/**
+ * Overtime makes the same year meaner each round: quicker, greedier, shorter.
+ * Lives are left alone — the point is to see how long you last, not to be
+ * robbed of the attempt.
+ */
+export function escalate(base: Tuning, round: number): Tuning {
+  if (round <= 0) return base;
+  const pace = 1 + 0.2 * round;
+  const goal = 1 + 0.15 * round;
+  const time = Math.max(0.55, 1 - 0.08 * round);
+  return {
+    ...base,
+    pace: (b) => base.pace(b) * pace,
+    goal: (b) => Math.max(1, Math.round(base.goal(b) * goal)),
+    time: (b) => base.time(b) * time,
+  };
+}
+
 export function tuning(id: DifficultyId): Tuning {
   const d = difficultyDef(id);
   return {

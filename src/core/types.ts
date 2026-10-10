@@ -115,6 +115,13 @@ export interface Era {
   theme: ThemeId;
   /** Rough length in seconds, shown on the timeline. */
   duration: number;
+  /**
+   * What happens once the goal is met.
+   * 'continue' — the game already keeps going on its own, so just let it run.
+   * 'rounds'   — restart it harder, and count the rounds.
+   * 'once'     — a set piece with nothing to survive; the year simply ends.
+   */
+  endless?: 'continue' | 'rounds' | 'once';
   fact: string;
   deepDive: EraDeepDive;
   play: EraPlay;

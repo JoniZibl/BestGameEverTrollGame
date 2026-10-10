@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useGame } from '../core/state';
-import { GameHost } from './GameHost';
+import { GameHost, type HostControls } from './GameHost';
 import { GameOverCard } from './GameOverCard';
 import { ResultCard } from './ResultCard';
 import { audio } from '../core/audio';
@@ -14,6 +14,12 @@ export function PlayScreen() {
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [attempt, setAttempt] = useState(0);
   const started = useRef(Date.now());
+  const controls = useRef<HostControls | null>(null);
+  const [secured, setSecured] = useState(false);
+  const onControls = useCallback((c: HostControls) => {
+    controls.current = c;
+    setSecured(c.secured);
+  }, []);
 
   const onWin = useCallback(
     (p?: WinPayload) => {
@@ -62,16 +68,27 @@ export function PlayScreen() {
       <div className="play-head">
         <span className="play-year">{era.label}</span>
         <span className="play-title">{era.title}</span>
-        <button className="btn tiny ghost" onClick={() => go('machine')}>
-          ABANDON YEAR
+        <button
+          className={`btn tiny${secured ? '' : ' ghost'}`}
+          onClick={() => (secured ? controls.current?.bank() : go('machine'))}
+        >
+          {secured ? 'BANK IT & STOP' : 'ABANDON YEAR'}
         </button>
       </div>
-      <GameHost key={`${era.id}-${attempt}`} era={era} onWin={onWin} onLose={onLose} onPress={onPress} />
+      <GameHost
+        key={`${era.id}-${attempt}`}
+        era={era}
+        onWin={onWin}
+        onLose={onLose}
+        onPress={onPress}
+        onControls={onControls}
+      />
       {outcome?.kind === 'lost' && (
         <GameOverCard
           reason={outcome.reason}
           onRetry={() => {
             started.current = Date.now();
+            setSecured(false);
             setOutcome(null);
             setAttempt((a) => a + 1);
           }}
@@ -80,6 +97,7 @@ export function PlayScreen() {
           onEasier={(next) => {
             setDifficulty(next);
             started.current = Date.now();
+            setSecured(false);
             setOutcome(null);
             setAttempt((a) => a + 1);
           }}

@@ -3,6 +3,7 @@ import type { Era, GameApi, MiniGame, PopupRequest, WinPayload } from '../core/t
 import { Input } from '../core/input';
 import { audio } from '../core/audio';
 import { useGame } from '../core/state';
+import { escalate } from '../core/difficulty';
 
 const FONTS: Record<string, string> = {
   display: "'Rowdies', 'Arial Black', system-ui, sans-serif",
@@ -11,15 +12,23 @@ const FONTS: Record<string, string> = {
   ui: "'Inter', system-ui, sans-serif",
 };
 
+export interface HostControls {
+  /** Ends the run now, keeping a win that has already been earned. */
+  bank: () => void;
+  secured: boolean;
+}
+
 interface Props {
   era: Era;
   onWin: (payload?: WinPayload) => void;
   onLose: (reason?: string) => void;
+  /** Lets the screen around the game end the run without discarding the win. */
+  onControls?: (c: HostControls) => void;
   /** Counts up while the player is actually playing, for the SKILL ISSUE check. */
   onPress?: (count: number) => void;
 }
 
-export function GameHost({ era, onWin, onLose, onPress }: Props) {
+export function GameHost({ era, onWin, onLose, onPress, onControls }: Props) {
   const { grant, tuning } = useGame();
   const tuningRef = useRef(tuning);
   tuningRef.current = tuning;
@@ -34,25 +43,98 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
   popupRef.current = popup;
   const doneRef = useRef(false);
 
+  // Overtime: the goal secures the year, then the game keeps going until you fail.
+  const mode = era.endless ?? 'rounds';
+  const securedRef = useRef<WinPayload | null>(null);
+  const [secured, setSecured] = useState(false);
+  const [round, setRound] = useState(0);
+  const roundRef = useRef(0);
+  roundRef.current = round;
+  const overtimeStart = useRef(0);
+  /** Guards against a game calling win() repeatedly while a round change is pending. */
+  const advancingRef = useRef(false);
+
+  const overtimeStat = useCallback(() => {
+    const base = securedRef.current?.stat ?? 'COMPLETE';
+    const secs = Math.max(0, Math.round((performance.now() - overtimeStart.current) / 1000));
+    const extra =
+      mode === 'rounds' && roundRef.current > 0
+        ? `+${roundRef.current} EXTRA ROUND${roundRef.current === 1 ? '' : 'S'}`
+        : `+${secs}s OVERTIME`;
+    return `${base} \u00b7 ${extra}`;
+  }, [mode]);
+
+  /** Ends the year for good, keeping the win if one was already earned. */
+  const settle = useCallback(
+    (lost: boolean, reason?: string) => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      if (securedRef.current) onWin({ ...securedRef.current, stat: overtimeStat() });
+      else if (lost) onLose(reason);
+      else onWin();
+    },
+    [onWin, onLose, overtimeStat],
+  );
+
+  /** Restarts the same year, harder, and counts it. */
+  const nextRound = useCallback((banner: string, line: string) => {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    audio.fanfare();
+    setShout(banner);
+    window.setTimeout(() => {
+      setShout('');
+      setCaption(line);
+      window.setTimeout(() => setCaption(''), 3000);
+      setRound((r) => r + 1);
+    }, 1500);
+  }, []);
+
   const finishWin = useCallback(
     (p?: WinPayload) => {
       if (doneRef.current) return;
-      doneRef.current = true;
-      onWin(p);
+      if (mode === 'once') {
+        doneRef.current = true;
+        onWin(p);
+        return;
+      }
+
+      if (securedRef.current) {
+        // Already secured: finishing again just earns another, harder round.
+        if (mode === 'rounds') {
+          nextRound(
+            `ROUND ${roundRef.current} CLEARED`,
+            'Again, then. It gets worse from here.',
+          );
+        }
+        return;
+      }
+
+      securedRef.current = p ?? {};
+      overtimeStart.current = performance.now();
+      setSecured(true);
+      if (mode === 'rounds') {
+        nextRound('YEAR SECURED', 'The machine has its fragment. The game would like another round.');
+      } else {
+        audio.fanfare();
+        setShout('YEAR SECURED');
+        window.setTimeout(() => {
+          setShout('');
+          setCaption('The machine has its fragment. The game has not finished with you.');
+          window.setTimeout(() => setCaption(''), 3200);
+        }, 1500);
+      }
     },
-    [onWin],
-  );
-  const finishLose = useCallback(
-    (reason?: string) => {
-      if (doneRef.current) return;
-      doneRef.current = true;
-      onLose(reason);
-    },
-    [onLose],
+    [mode, onWin, nextRound],
   );
 
+  const finishLose = useCallback((reason?: string) => settle(true, reason), [settle]);
+
   useEffect(() => {
-    doneRef.current = false;
+    onControls?.({ bank: () => settle(false), secured });
+  }, [onControls, settle, secured]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap || era.play.kind !== 'canvas') return;
@@ -107,7 +189,7 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
       get isTouch() {
         return input.coarse;
       },
-      diff: tuningRef.current,
+      diff: escalate(tuningRef.current, round),
       say: (text, ms = 2600) => {
         setCaption(text);
         captionTimer = ms / 1000;
@@ -122,6 +204,7 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
       lose: finishLose,
     };
 
+    advancingRef.current = false;
     const game: MiniGame = era.play.create(api);
     game.start?.();
     // One control hint per game, phrased for whatever the player is holding.
@@ -159,13 +242,20 @@ export function GameHost({ era, onWin, onLose, onPress }: Props) {
       input.detach();
       game.stop?.();
     };
-  }, [era, finishWin, finishLose, onPress]);
+  }, [era, round, finishWin, finishLose, onPress]);
 
   const ReactGame = era.play.kind === 'react' ? era.play.Component : null;
 
   return (
     <div className="host">
-      <div className="hud-line">{hud}</div>
+      <div className="hud-line">
+        <span>{hud}</span>
+        {secured ? (
+          <span className="overtime">
+            <b>OVERTIME{mode === 'rounds' && round > 0 ? ` \u00b7 ROUND ${round}` : ''}</b>
+          </span>
+        ) : null}
+      </div>
       <div className="stage" data-era={era.theme} ref={wrapRef}>
         {era.play.kind === 'canvas' ? (
           <canvas ref={canvasRef} className="game-canvas" />
